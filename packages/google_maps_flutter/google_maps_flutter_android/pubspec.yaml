@@ -21,7 +21,11 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_plugin_android_lifecycle: ^2.0.1
-  google_maps_flutter_platform_interface: ^2.9.5
+  google_maps_flutter_platform_interface:
+    git:
+        url: https://github.com/basemosama/packages.git
+        path: packages/google_maps_flutter/google_maps_flutter_platform_interface
+        ref: feat_add_get_clusters_to_map
   stream_transform: ^2.0.0
 
 dev_dependencies:

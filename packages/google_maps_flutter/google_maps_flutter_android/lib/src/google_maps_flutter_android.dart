@@ -219,6 +219,15 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     return _events(mapId).whereType<ClusterTapEvent>();
   }
 
+  /// Returns current clusters from [ClusterManager].
+  @override
+  Future<List<Cluster>> getClusters(
+      {required int mapId, required ClusterManagerId clusterManagerId}) async {
+    final List<PlatformCluster> clusters =
+        await _hostApi(mapId).getClusters(clusterManagerId.value);
+    return clusters.map(clusterFromPlatformCluster).toList();
+  }
+
   @override
   Future<void> updateMapConfiguration(
     MapConfiguration configuration, {
