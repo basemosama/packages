@@ -21,16 +21,34 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
-  google_maps_flutter_android: ^2.13.0
-  google_maps_flutter_ios: ^2.12.0
-  google_maps_flutter_platform_interface: ^2.9.0
-  google_maps_flutter_web: ^0.5.10
+  google_maps_flutter_android:
+    git:
+      url: https://github.com/basemosama/packages.git
+      path: packages/google_maps_flutter/google_maps_flutter_android
+      ref: feat_add_get_clusters_to_map
+  google_maps_flutter_ios:
+    git:
+      url: https://github.com/basemosama/packages.git
+      path: packages/google_maps_flutter/google_maps_flutter_ios
+      ref: feat_add_get_clusters_to_map
+  google_maps_flutter_platform_interface:
+    git:
+      url: https://github.com/basemosama/packages.git
+      path: packages/google_maps_flutter/google_maps_flutter_platform_interface
+      ref: feat_add_get_clusters_to_map
+  google_maps_flutter_web:
+    git:
+      url: https://github.com/basemosama/packages.git
+      path: packages/google_maps_flutter/google_maps_flutter_web
+      ref: feat_add_get_clusters_to_map
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   plugin_platform_interface: ^2.1.7
   stream_transform: ^2.0.0
+
 
 topics:
   - google-maps

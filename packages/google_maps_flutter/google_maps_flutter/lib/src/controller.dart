@@ -290,6 +290,13 @@ class GoogleMapController {
         .isMarkerInfoWindowShown(markerId, mapId: mapId);
   }
 
+  /// Get current clusters for the map.
+  /// The `clusterManagerId` must match one of the cluster managers on the map.
+  Future<List<Cluster>> getClusters(ClusterManagerId clusterId) {
+    return GoogleMapsFlutterPlatform.instance
+        .getClusters(clusterManagerId: clusterId, mapId: mapId);
+  }
+
   /// Returns the current zoom level of the map
   Future<double> getZoomLevel() {
     return GoogleMapsFlutterPlatform.instance.getZoomLevel(mapId: mapId);

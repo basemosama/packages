@@ -23,7 +23,11 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   google_maps: ^8.0.0
-  google_maps_flutter_platform_interface: ^2.9.0
+  google_maps_flutter_platform_interface:
+    git:
+      url: https://github.com/basemosama/packages.git
+      path: packages/google_maps_flutter/google_maps_flutter_platform_interface
+      ref: feat_add_get_clusters_to_map
   sanitize_html: ^2.0.0
   stream_transform: ^2.0.0
   web: ">=0.5.1 <2.0.0"
