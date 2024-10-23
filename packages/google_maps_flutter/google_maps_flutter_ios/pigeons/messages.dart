@@ -380,6 +380,10 @@ abstract class MapsApi {
   @ObjCSelector('isShowingInfoWindowForMarkerWithIdentifier:')
   bool isInfoWindowShown(String markerId);
 
+  /// Gets the current map clusters.
+  @ObjCSelector('getClusters:')
+  List<PlatformCluster> getClusters(String clusterManagerId);
+
   /// Sets the style to the given map style string, where an empty string
   /// indicates that the style should be cleared.
   ///
