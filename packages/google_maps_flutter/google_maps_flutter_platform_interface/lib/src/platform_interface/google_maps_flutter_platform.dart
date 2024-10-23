@@ -389,6 +389,12 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
     throw UnimplementedError('onClusterTap() has not been implemented.');
   }
 
+  /// Returns current clusters from [ClusterManager].
+  Future<List<Cluster>> getClusters(
+      {required int mapId, required ClusterManagerId clusterManagerId}) {
+    throw UnimplementedError('getClusters() has not been implemented.');
+  }
+
   /// Dispose of whatever resources the `mapId` is holding on to.
   void dispose({required int mapId}) {
     throw UnimplementedError('dispose() has not been implemented.');

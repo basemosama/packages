@@ -525,6 +525,38 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     return channel(mapId).invokeMethod<Uint8List>('map#takeSnapshot');
   }
 
+  @override
+  Future<List<Cluster>> getClusters(
+      {required int mapId, required ClusterManagerId clusterManagerId}) async {
+    final List<dynamic> clusters = (await channel(mapId)
+        .invokeMethod<List<Cluster>>('cluster#getClusters',
+            <String, String>{'clusterManagerId': clusterManagerId.value}))!;
+
+    return clusters.map((e) {
+      final Map<String, Object?> arguments = e as Map<String, dynamic>;
+      final ClusterManagerId clusterManagerId =
+          ClusterManagerId(arguments['clusterManagerId']! as String);
+      final LatLng position = LatLng.fromJson(arguments['position'])!;
+
+      final Map<String, List<dynamic>> latLngData =
+          (arguments['bounds']! as Map<dynamic, dynamic>).map(
+              (dynamic key, dynamic object) => MapEntry<String, List<dynamic>>(
+                  key as String, object as List<dynamic>));
+
+      final LatLngBounds bounds = LatLngBounds(
+          northeast: LatLng.fromJson(latLngData['northeast'])!,
+          southwest: LatLng.fromJson(latLngData['southwest'])!);
+
+      final List<MarkerId> markerIds =
+          (arguments['markerIds']! as List<dynamic>)
+              .map((dynamic markerId) => MarkerId(markerId as String))
+              .toList();
+
+      return Cluster(clusterManagerId, markerIds,
+          position: position, bounds: bounds);
+    }).toList();
+  }
+
   /// Set [GoogleMapsFlutterPlatform] to use [AndroidViewSurface] to build the Google Maps widget.
   ///
   /// This implementation uses hybrid composition to render the Google Maps
