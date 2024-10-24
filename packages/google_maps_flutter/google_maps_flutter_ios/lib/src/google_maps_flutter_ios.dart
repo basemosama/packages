@@ -422,14 +422,6 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
     return _hostApi(mapId).isInfoWindowShown(markerId.value);
   }
 
-  /// Returns current clusters from [ClusterManager].
-  @override
-  Future<List<Cluster>> getClusters(
-      {required int mapId, required ClusterManagerId clusterManagerId}) async {
-    final List<PlatformCluster> clusters =
-        await _hostApi(mapId).getClusters(clusterManagerId.value);
-    return clusters.map(clusterFromPlatformCluster).toList();
-  }
 
   @override
   Future<double> getZoomLevel({
@@ -437,6 +429,17 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   }) {
     return _hostApi(mapId).getZoomLevel();
   }
+
+
+  /// Returns current clusters from [ClusterManager].
+  @override
+  Future<List<Cluster>> getClusters(
+      {required int mapId, required ClusterManagerId clusterManagerId}) async {
+    final List<PlatformCluster> clusters =
+    await _hostApi(mapId).getClusters(clusterManagerId.value);
+    return clusters.map(clusterFromPlatformCluster).toList();
+  }
+
 
   @override
   Future<Uint8List?> takeSnapshot({

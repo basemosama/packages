@@ -691,6 +691,13 @@
                                                                                error:error];
 }
 
+
+- (nullable NSArray<FGMPlatformCluster *> *)getClusters:(NSString *)clusterManagerId error:(FlutterError *_Nullable *_Nonnull)error{
+    return [self.controller.clusterManagersController clustersWithIdentifier:clusterManagerId
+                                                                                 error:error];
+}
+
+
 - (nullable NSString *)setStyle:(nonnull NSString *)style
                           error:(FlutterError *_Nullable __autoreleasing *_Nonnull)error {
   return [self.controller setMapStyle:style];
