@@ -41,14 +41,15 @@
 }
 
 - (void)addClusterManager:(NSString *)identifier {
-  id<GMUClusterAlgorithm> algorithm = [[GMUNonHierarchicalDistanceBasedAlgorithm alloc] init];
-  id<GMUClusterIconGenerator> iconGenerator = [[GMUDefaultClusterIconGenerator alloc] init];
-  id<GMUClusterRenderer> renderer =
-      [[GMUDefaultClusterRenderer alloc] initWithMapView:self.mapView
-                                    clusterIconGenerator:iconGenerator];
-  self.clusterManagerIdentifierToManagers[identifier] =
-      [[GMUClusterManager alloc] initWithMap:self.mapView algorithm:algorithm renderer:renderer];
-  ;
+    // Initialize the Grid-Based Algorithm
+    id<GMUClusterAlgorithm> algorithm = [[GMUGridBasedClusterAlgorithm alloc] init];
+    
+    id<GMUClusterIconGenerator> iconGenerator = [[GMUDefaultClusterIconGenerator alloc] init];
+    GMUDefaultClusterRenderer *renderer = [[GMUDefaultClusterRenderer alloc] initWithMapView:self.mapView
+                                                                       clusterIconGenerator:iconGenerator];
+
+    self.clusterManagerIdentifierToManagers[identifier] =
+        [[GMUClusterManager alloc] initWithMap:self.mapView algorithm:algorithm renderer:renderer];
 }
 
 - (void)removeClusterManagersWithIdentifiers:(NSArray<NSString *> *)identifiers {
