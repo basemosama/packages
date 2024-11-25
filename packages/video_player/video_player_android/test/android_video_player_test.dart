@@ -97,14 +97,13 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   }
 
   @override
-  TrackSelectionsMessage trackSelections(TextureMessage msg) {
-    log.add('trackSelections');
+  TrackSelectionsMessage trackSelections(int textureId) {
     return TrackSelectionsMessage(
-        textureId: msg.textureId,
-        trackId: 'trackId',
-        trackSelections: <Object>[],
-        trackType: 0,
-        trackIndex: 0);
+      textureId: textureId,
+      trackId: '1',
+      trackSelections: <TrackSelection>[],
+      trackType: 1,
+    );
   }
 }
 

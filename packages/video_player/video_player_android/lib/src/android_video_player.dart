@@ -107,12 +107,12 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }) async {
     trackSelectionNameResource ??= const TrackSelectionNameResource();
 
-    final TrackSelectionsMessage response = await _api.trackSelections(
-        TextureMessage(textureId: textureId)..textureId = textureId);
+    final TrackSelectionsMessage response =
+        await _api.trackSelections(textureId);
 
-    final List<TrackSelection> trackSelections = [];
+    final List<TrackSelection> trackSelections = <TrackSelection>[];
     for (dynamic trackSelectionMap in response.trackSelections!) {
-      final trackSelectionType =
+      final TrackSelectionType trackSelectionType =
           _intTrackSelectionTypeMap[trackSelectionMap['trackType']]!;
       final bool isUnknown = trackSelectionMap['isUnknown'] as bool;
       final bool isAuto = trackSelectionMap['isAuto'] as bool;
@@ -136,7 +136,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
               final int bitrate = trackSelectionMap['bitrate'] as int;
               final int width = trackSelectionMap['width'] as int;
               final int height = trackSelectionMap['height'] as int;
-              final trackSelectionName = _joinWithSeparator([
+              final String trackSelectionName = _joinWithSeparator(<String>[
                 _buildRoleString(rolesFlag, trackSelectionNameResource),
                 _buildVideoQualityOrResolutionString(
                     bitrate, width, height, trackSelectionNameResource),
@@ -163,7 +163,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
               final String label = trackSelectionMap['label'] as String;
               final int channelCount = trackSelectionMap['channelCount'] as int;
               final int bitrate = trackSelectionMap['bitrate'] as int;
-              final trackSelectionName = _joinWithSeparator([
+              final String trackSelectionName = _joinWithSeparator(<String>[
                 _buildLanguageOrLabelString(
                     language, rolesFlag, label, trackSelectionNameResource),
                 _buildAudioChannelString(
@@ -190,7 +190,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
               final int rolesFlag = trackSelectionMap['rolesFlag'] as int;
               final String language = trackSelectionMap['language'] as String;
               final String label = trackSelectionMap['label'] as String;
-              final trackSelectionName = _buildLanguageOrLabelString(
+              final String trackSelectionName = _buildLanguageOrLabelString(
                   language, rolesFlag, label, trackSelectionNameResource);
               trackSelections.add(TrackSelection(
                 trackId: trackId,
@@ -266,7 +266,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
             isPlaying: map['isPlaying'] as bool,
           );
         case 'subtitle':
-          List<String>? subtitle =
+          final List<String>? subtitle =
               (map['cues'] as List?)?.map((e) => e.toString()).toList();
           return VideoEvent(
             eventType: VideoEventType.subtitle,
@@ -363,7 +363,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       return trackSelectionNameResource.trackBitrate1080p;
     }
 
-    return _joinWithSeparator([
+    return _joinWithSeparator(<String>[
       _buildResolutionString(width, height, trackSelectionNameResource),
       _buildAvgBitrateString(bitrate, trackSelectionNameResource),
     ], trackSelectionNameResource.trackItemListSeparator);
@@ -374,8 +374,11 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
     if (width == -1 || height == -1) {
       return '';
     }
-    return [width, trackSelectionNameResource.trackResolutionSeparator, height]
-        .join(' ');
+    return <Object>[
+      width,
+      trackSelectionNameResource.trackResolutionSeparator,
+      height
+    ].join(' ');
   }
 
   String _buildAvgBitrateString(
@@ -383,7 +386,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
     if (bitrate == -1) {
       return '';
     }
-    return [
+    return <String>[
       (bitrate / 1000000).toStringAsFixed(2),
       trackSelectionNameResource.trackBitrateMbps,
     ].join(' ');
@@ -395,8 +398,11 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
     String label,
     TrackSelectionNameResource trackSelectionNameResource,
   ) {
-    String languageAndRole = _joinWithSeparator(
-      [language, _buildRoleString(rolesFlag, trackSelectionNameResource)],
+    final String languageAndRole = _joinWithSeparator(
+      <String>[
+        language,
+        _buildRoleString(rolesFlag, trackSelectionNameResource)
+      ],
       trackSelectionNameResource.trackItemListSeparator,
     );
     return languageAndRole.isEmpty ? label : languageAndRole;
@@ -439,7 +445,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       if (jointNames.isEmpty) {
         jointNames = name;
       } else if (name.isNotEmpty) {
-        jointNames += [separator, name].join(' ');
+        jointNames += <String>[separator, name].join(' ');
       }
     }
     return jointNames;

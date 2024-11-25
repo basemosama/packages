@@ -15,23 +15,11 @@ import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
-import io.flutter.plugins.videoplayer.Messages.AndroidVideoPlayerApi;
-import io.flutter.plugins.videoplayer.Messages.CreateMessage;
-import io.flutter.plugins.videoplayer.Messages.LoopingMessage;
-import io.flutter.plugins.videoplayer.Messages.MixWithOthersMessage;
-import io.flutter.plugins.videoplayer.Messages.PlaybackSpeedMessage;
-import io.flutter.plugins.videoplayer.Messages.PositionMessage;
-import io.flutter.plugins.videoplayer.Messages.TextureMessage;
-import io.flutter.plugins.videoplayer.Messages.TrackSelectionsMessage;
-import io.flutter.plugins.videoplayer.Messages.VolumeMessage;
+import io.flutter.plugins.videoplayer.Messages.*;
 import io.flutter.view.TextureRegistry;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
-import javax.net.ssl.HttpsURLConnection;
 
 /** Android platform implementation of the VideoPlayerPlugin. */
+
 @OptIn(markerClass = UnstableApi.class)
 public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   private static final String TAG = "VideoPlayerPlugin";
@@ -46,12 +34,12 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
     final FlutterInjector injector = FlutterInjector.instance();
     this.flutterState =
-        new FlutterState(
-            binding.getApplicationContext(),
-            binding.getBinaryMessenger(),
-            injector.flutterLoader()::getLookupKeyForAsset,
-            injector.flutterLoader()::getLookupKeyForAsset,
-            binding.getTextureRegistry());
+            new FlutterState(
+                    binding.getApplicationContext(),
+                    binding.getBinaryMessenger(),
+                    injector.flutterLoader()::getLookupKeyForAsset,
+                    injector.flutterLoader()::getLookupKeyForAsset,
+                    binding.getTextureRegistry());
     flutterState.startListening(this, binding.getBinaryMessenger());
   }
 
@@ -81,22 +69,24 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     disposeAllPlayers();
   }
 
+  @Override
   public void initialize() {
     disposeAllPlayers();
   }
 
-  public @NonNull TextureMessage create(@NonNull CreateMessage arg) {
+  @Override
+  public @NonNull Long create(@NonNull CreateMessage arg) {
     TextureRegistry.SurfaceProducer handle = flutterState.textureRegistry.createSurfaceProducer();
     EventChannel eventChannel =
-        new EventChannel(
-            flutterState.binaryMessenger, "flutter.io/videoPlayer/videoEvents" + handle.id());
+            new EventChannel(
+                    flutterState.binaryMessenger, "flutter.io/videoPlayer/videoEvents" + handle.id());
 
     final VideoAsset videoAsset;
     if (arg.getAsset() != null) {
       String assetLookupKey;
       if (arg.getPackageName() != null) {
         assetLookupKey =
-            flutterState.keyForAssetAndPackageName.get(arg.getAsset(), arg.getPackageName());
+                flutterState.keyForAssetAndPackageName.get(arg.getAsset(), arg.getPackageName());
       } else {
         assetLookupKey = flutterState.keyForAsset.get(arg.getAsset());
       }
@@ -122,15 +112,15 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
       videoAsset = VideoAsset.fromRemoteUrl(arg.getUri(), streamingFormat, arg.getHttpHeaders());
     }
     videoPlayers.put(
-        handle.id(),
-        VideoPlayer.create(
-            flutterState.applicationContext,
-            VideoPlayerEventCallbacks.bindTo(eventChannel),
-            handle,
-            videoAsset,
-            options));
+            handle.id(),
+            VideoPlayer.create(
+                    flutterState.applicationContext,
+                    VideoPlayerEventCallbacks.bindTo(eventChannel),
+                    handle,
+                    videoAsset,
+                    options));
 
-    return new TextureMessage.Builder().setTextureId(handle.id()).build();
+    return handle.id();
   }
 
   @NonNull
@@ -149,75 +139,81 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     return player;
   }
 
-  public void dispose(@NonNull TextureMessage arg) {
-    VideoPlayer player = getPlayer(arg.getTextureId());
+  @Override
+  public void dispose(@NonNull Long textureId) {
+    VideoPlayer player = getPlayer(textureId);
     player.dispose();
-    videoPlayers.remove(arg.getTextureId());
+    videoPlayers.remove(textureId);
   }
 
-  public void setLooping(@NonNull LoopingMessage arg) {
-    VideoPlayer player = getPlayer(arg.getTextureId());
-    player.setLooping(arg.getIsLooping());
+  @Override
+  public void setLooping(@NonNull Long textureId, @NonNull Boolean looping) {
+    VideoPlayer player = getPlayer(textureId);
+    player.setLooping(looping);
   }
 
-  public void setVolume(@NonNull VolumeMessage arg) {
-    VideoPlayer player = getPlayer(arg.getTextureId());
-    player.setVolume(arg.getVolume());
+  @Override
+  public void setVolume(@NonNull Long textureId, @NonNull Double volume) {
+    VideoPlayer player = getPlayer(textureId);
+    player.setVolume(volume);
   }
 
-  public void setPlaybackSpeed(@NonNull PlaybackSpeedMessage arg) {
-    VideoPlayer player = getPlayer(arg.getTextureId());
-    player.setPlaybackSpeed(arg.getSpeed());
+  @Override
+  public void setPlaybackSpeed(@NonNull Long textureId, @NonNull Double speed) {
+    VideoPlayer player = getPlayer(textureId);
+    player.setPlaybackSpeed(speed);
   }
 
-  public void play(@NonNull TextureMessage arg) {
-    VideoPlayer player = getPlayer(arg.getTextureId());
+  @Override
+  public void play(@NonNull Long textureId) {
+    VideoPlayer player = getPlayer(textureId);
     player.play();
   }
 
-  public @NonNull PositionMessage position(@NonNull TextureMessage arg) {
-    VideoPlayer player = getPlayer(arg.getTextureId());
-    PositionMessage result =
-        new PositionMessage.Builder()
-            .setPosition(player.getPosition())
-            .setTextureId(arg.getTextureId())
-            .build();
+  @Override
+  public @NonNull Long position(@NonNull Long textureId) {
+    VideoPlayer player = getPlayer(textureId);
+    long position = player.getPosition();
     player.sendBufferingUpdate();
-    return result;
+    return position;
   }
 
-  public void seekTo(@NonNull PositionMessage arg) {
-    VideoPlayer player = getPlayer(arg.getTextureId());
-    player.seekTo(arg.getPosition().intValue());
+  @Override
+  public void seekTo(@NonNull Long textureId, @NonNull Long position) {
+    VideoPlayer player = getPlayer(textureId);
+    player.seekTo(position.intValue());
+  }
+
+  @Override
+  public void pause(@NonNull Long textureId) {
+    VideoPlayer player = getPlayer(textureId);
+    player.pause();
+  }
+
+  @Override
+  public void setMixWithOthers(@NonNull Boolean mixWithOthers) {
+    options.mixWithOthers = mixWithOthers;
   }
 
   @NonNull
-  @OptIn(markerClass = UnstableApi.class)
-  public TrackSelectionsMessage trackSelections(TextureMessage arg) {
+  @Override
+  public TrackSelectionsMessage trackSelections(@NonNull Long textureId) {
     System.err.println("xxx : tracks 5 ...");
-    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    VideoPlayer player = videoPlayers.get(textureId);
     TrackSelectionsMessage result = new TrackSelectionsMessage();
-    result.setTextureId(arg.getTextureId());
+    result.setTextureId(textureId);
     result.setTrackSelections(player.getTrackSelections());
     System.err.println("xxx : tracks 51 ...");
     System.err.println(result.toString());
     return result;
   }
 
+
   public void setTrackSelection(TrackSelectionsMessage arg) {
     System.err.println("xxx : setTrackSelection : " + arg.toList());
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
     player.setTrackSelection(arg.getTrackId(), arg.getTrackType().intValue());
 
-  }
-  public void pause(@NonNull TextureMessage arg) {
-    VideoPlayer player = getPlayer(arg.getTextureId());
-    player.pause();
-  }
-
-  @Override
-  public void setMixWithOthers(@NonNull MixWithOthersMessage arg) {
-    options.mixWithOthers = arg.getMixWithOthers();
   }
 
   private interface KeyForAssetFn {
@@ -236,11 +232,11 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     final TextureRegistry textureRegistry;
 
     FlutterState(
-        Context applicationContext,
-        BinaryMessenger messenger,
-        KeyForAssetFn keyForAsset,
-        KeyForAssetAndPackageName keyForAssetAndPackageName,
-        TextureRegistry textureRegistry) {
+            Context applicationContext,
+            BinaryMessenger messenger,
+            KeyForAssetFn keyForAsset,
+            KeyForAssetAndPackageName keyForAssetAndPackageName,
+            TextureRegistry textureRegistry) {
       this.applicationContext = applicationContext;
       this.binaryMessenger = messenger;
       this.keyForAsset = keyForAsset;

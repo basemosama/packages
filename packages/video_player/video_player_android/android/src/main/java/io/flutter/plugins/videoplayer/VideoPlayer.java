@@ -89,7 +89,7 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
 
 
           final NextRenderersFactory renderersFactory =new NextRenderersFactory(context);
-          renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
+          renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER);
           renderersFactory.setEnableDecoderFallback(true);
 
 
