@@ -107,109 +107,115 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }) async {
     trackSelectionNameResource ??= const TrackSelectionNameResource();
 
-    final TrackSelectionsMessage response =
-        await _api.trackSelections(textureId);
+    try {
+      final TrackSelectionsMessage response =
+          await _api.trackSelections(textureId);
 
-    final List<TrackSelection> trackSelections = <TrackSelection>[];
-    for (dynamic trackSelectionMap in response.trackSelections!) {
-      final TrackSelectionType trackSelectionType =
-          _intTrackSelectionTypeMap[trackSelectionMap['trackType']]!;
-      final bool isUnknown = trackSelectionMap['isUnknown'] as bool;
-      final bool isAuto = trackSelectionMap['isAuto'] as bool;
-      final String trackId = trackSelectionMap['trackId'] as String;
-      final bool isSelected = trackSelectionMap['isSelected'] as bool;
+      final List<TrackSelection> trackSelections = <TrackSelection>[];
 
-      if (isUnknown || isAuto) {
-        trackSelections.add(TrackSelection(
-          trackId: trackId,
-          trackType: trackSelectionType,
-          trackName: isUnknown
-              ? trackSelectionNameResource.trackUnknown
-              : trackSelectionNameResource.trackAuto,
-          isSelected: isSelected,
-        ));
-      } else {
-        switch (trackSelectionType) {
-          case TrackSelectionType.video:
-            {
-              final int rolesFlag = trackSelectionMap['rolesFlag'] as int;
-              final int bitrate = trackSelectionMap['bitrate'] as int;
-              final int width = trackSelectionMap['width'] as int;
-              final int height = trackSelectionMap['height'] as int;
-              final String trackSelectionName = _joinWithSeparator(<String>[
-                _buildRoleString(rolesFlag, trackSelectionNameResource),
-                _buildVideoQualityOrResolutionString(
-                    bitrate, width, height, trackSelectionNameResource),
-              ], trackSelectionNameResource.trackItemListSeparator);
-              trackSelections.add(TrackSelection(
-                trackId: trackId,
-                trackType: trackSelectionType,
-                trackName: trackSelectionName.isEmpty
-                    ? trackSelectionNameResource.trackUnknown
-                    : trackSelectionName,
-                isSelected: isSelected,
-                size: width == -1 || height == -1
-                    ? null
-                    : Size(width.toDouble(), height.toDouble()),
-                role: _toRoleType(rolesFlag),
-                bitrate: bitrate == -1 ? null : bitrate,
-              ));
-              break;
-            }
-          case TrackSelectionType.audio:
-            {
-              final int rolesFlag = trackSelectionMap['rolesFlag'] as int;
-              final String language = trackSelectionMap['language'] as String;
-              final String label = trackSelectionMap['label'] as String;
-              final int channelCount = trackSelectionMap['channelCount'] as int;
-              final int bitrate = trackSelectionMap['bitrate'] as int;
-              final String trackSelectionName = _joinWithSeparator(<String>[
-                _buildLanguageOrLabelString(
-                    language, rolesFlag, label, trackSelectionNameResource),
-                _buildAudioChannelString(
-                    channelCount, trackSelectionNameResource),
-                _buildAvgBitrateString(bitrate, trackSelectionNameResource),
-              ], trackSelectionNameResource.trackItemListSeparator);
-              trackSelections.add(TrackSelection(
-                trackId: trackId,
-                trackType: trackSelectionType,
-                trackName: trackSelectionName.isEmpty
-                    ? trackSelectionNameResource.trackUnknown
-                    : trackSelectionName,
-                isSelected: isSelected,
-                language: language.isEmpty ? null : language,
-                label: label.isEmpty ? null : label,
-                channel: _toChannelType(channelCount),
-                role: _toRoleType(rolesFlag),
-                bitrate: bitrate == -1 ? null : bitrate,
-              ));
-              break;
-            }
-          case TrackSelectionType.text:
-            {
-              final int rolesFlag = trackSelectionMap['rolesFlag'] as int;
-              final String language = trackSelectionMap['language'] as String;
-              final String label = trackSelectionMap['label'] as String;
-              final String trackSelectionName = _buildLanguageOrLabelString(
-                  language, rolesFlag, label, trackSelectionNameResource);
-              trackSelections.add(TrackSelection(
-                trackId: trackId,
-                trackType: trackSelectionType,
-                trackName: trackSelectionName.isEmpty
-                    ? trackSelectionNameResource.trackUnknown
-                    : trackSelectionName,
-                isSelected: isSelected,
-                language: language.isEmpty ? null : language,
-                label: label.isEmpty ? null : label,
-                role: _toRoleType(rolesFlag),
-              ));
-              break;
-            }
+      for (dynamic trackSelectionMap in response.trackSelections) {
+        final TrackSelectionType trackSelectionType =
+            _intTrackSelectionTypeMap[trackSelectionMap['trackType']]!;
+        final bool isUnknown = trackSelectionMap['isUnknown'] as bool;
+        final bool isAuto = trackSelectionMap['isAuto'] as bool;
+        final String trackId = trackSelectionMap['trackId'] as String;
+        final bool isSelected = trackSelectionMap['isSelected'] as bool;
+
+        if (isUnknown || isAuto) {
+          trackSelections.add(TrackSelection(
+            trackId: trackId,
+            trackType: trackSelectionType,
+            trackName: isUnknown
+                ? trackSelectionNameResource.trackUnknown
+                : trackSelectionNameResource.trackAuto,
+            isSelected: isSelected,
+          ));
+        } else {
+          switch (trackSelectionType) {
+            case TrackSelectionType.video:
+              {
+                final int rolesFlag = trackSelectionMap['rolesFlag'] as int;
+                final int bitrate = trackSelectionMap['bitrate'] as int;
+                final int width = trackSelectionMap['width'] as int;
+                final int height = trackSelectionMap['height'] as int;
+                final String trackSelectionName = _joinWithSeparator(<String>[
+                  _buildRoleString(rolesFlag, trackSelectionNameResource),
+                  _buildVideoQualityOrResolutionString(
+                      bitrate, width, height, trackSelectionNameResource),
+                ], trackSelectionNameResource.trackItemListSeparator);
+                trackSelections.add(TrackSelection(
+                  trackId: trackId,
+                  trackType: trackSelectionType,
+                  trackName: trackSelectionName.isEmpty
+                      ? trackSelectionNameResource.trackUnknown
+                      : trackSelectionName,
+                  isSelected: isSelected,
+                  size: width == -1 || height == -1
+                      ? null
+                      : Size(width.toDouble(), height.toDouble()),
+                  role: _toRoleType(rolesFlag),
+                  bitrate: bitrate == -1 ? null : bitrate,
+                ));
+                break;
+              }
+            case TrackSelectionType.audio:
+              {
+                final int rolesFlag = trackSelectionMap['rolesFlag'] as int;
+                final String language = trackSelectionMap['language'] as String;
+                final String label = trackSelectionMap['label'] as String;
+                final int channelCount =
+                    trackSelectionMap['channelCount'] as int;
+                final int bitrate = trackSelectionMap['bitrate'] as int;
+                final String trackSelectionName = _joinWithSeparator(<String>[
+                  _buildLanguageOrLabelString(
+                      language, rolesFlag, label, trackSelectionNameResource),
+                  _buildAudioChannelString(
+                      channelCount, trackSelectionNameResource),
+                  _buildAvgBitrateString(bitrate, trackSelectionNameResource),
+                ], trackSelectionNameResource.trackItemListSeparator);
+                trackSelections.add(TrackSelection(
+                  trackId: trackId,
+                  trackType: trackSelectionType,
+                  trackName: trackSelectionName.isEmpty
+                      ? trackSelectionNameResource.trackUnknown
+                      : trackSelectionName,
+                  isSelected: isSelected,
+                  language: language.isEmpty ? null : language,
+                  label: label.isEmpty ? null : label,
+                  channel: _toChannelType(channelCount),
+                  role: _toRoleType(rolesFlag),
+                  bitrate: bitrate == -1 ? null : bitrate,
+                ));
+                break;
+              }
+            case TrackSelectionType.text:
+              {
+                final int rolesFlag = trackSelectionMap['rolesFlag'] as int;
+                final String language = trackSelectionMap['language'] as String;
+                final String label = trackSelectionMap['label'] as String;
+                final String trackSelectionName = _buildLanguageOrLabelString(
+                    language, rolesFlag, label, trackSelectionNameResource);
+                trackSelections.add(TrackSelection(
+                  trackId: trackId,
+                  trackType: trackSelectionType,
+                  trackName: trackSelectionName.isEmpty
+                      ? trackSelectionNameResource.trackUnknown
+                      : trackSelectionName,
+                  isSelected: isSelected,
+                  language: language.isEmpty ? null : language,
+                  label: label.isEmpty ? null : label,
+                  role: _toRoleType(rolesFlag),
+                ));
+                break;
+              }
+          }
         }
       }
-    }
 
-    return trackSelections;
+      return trackSelections;
+    } catch (e) {
+      return [];
+    }
   }
 
   @override

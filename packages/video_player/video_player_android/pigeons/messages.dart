@@ -25,15 +25,15 @@ class CreateMessage {
 class TrackSelectionsMessage {
   TrackSelectionsMessage({
     required this.textureId,
-    required this.trackId,
+    this.trackId,
     required this.trackSelections,
     this.trackIndex,
-    required this.trackType,
+    this.trackType,
   });
   int textureId;
-  String trackId;
   List<Object> trackSelections;
-  int trackType;
+  String? trackId;
+  int? trackType;
   int? trackIndex;
 }
 

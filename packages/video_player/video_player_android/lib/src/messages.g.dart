@@ -74,27 +74,27 @@ class CreateMessage {
 class TrackSelectionsMessage {
   TrackSelectionsMessage({
     required this.textureId,
-    required this.trackId,
     required this.trackSelections,
-    required this.trackType,
+    this.trackId,
+    this.trackType,
     this.trackIndex,
   });
 
   int textureId;
 
-  String trackId;
-
   List<Object> trackSelections;
 
-  int trackType;
+  String? trackId;
+
+  int? trackType;
 
   int? trackIndex;
 
   Object encode() {
     return <Object?>[
       textureId,
-      trackId,
       trackSelections,
+      trackId,
       trackType,
       trackIndex,
     ];
@@ -104,9 +104,9 @@ class TrackSelectionsMessage {
     result as List<Object?>;
     return TrackSelectionsMessage(
       textureId: result[0]! as int,
-      trackId: result[1]! as String,
-      trackSelections: (result[2] as List<Object?>?)!.cast<Object>(),
-      trackType: result[3]! as int,
+      trackSelections: (result[1] as List<Object?>?)!.cast<Object>(),
+      trackId: result[2] as String?,
+      trackType: result[3] as int?,
       trackIndex: result[4] as int?,
     );
   }

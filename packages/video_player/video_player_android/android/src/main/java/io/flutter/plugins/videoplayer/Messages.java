@@ -243,19 +243,6 @@ public class Messages {
       this.textureId = setterArg;
     }
 
-    private @NonNull String trackId;
-
-    public @NonNull String getTrackId() {
-      return trackId;
-    }
-
-    public void setTrackId(@NonNull String setterArg) {
-      if (setterArg == null) {
-        throw new IllegalStateException("Nonnull field \"trackId\" is null.");
-      }
-      this.trackId = setterArg;
-    }
-
     private @NonNull List<Object> trackSelections;
 
     public @NonNull List<Object> getTrackSelections() {
@@ -269,16 +256,23 @@ public class Messages {
       this.trackSelections = setterArg;
     }
 
-    private @NonNull Long trackType;
+    private @Nullable String trackId;
 
-    public @NonNull Long getTrackType() {
+    public @Nullable String getTrackId() {
+      return trackId;
+    }
+
+    public void setTrackId(@Nullable String setterArg) {
+      this.trackId = setterArg;
+    }
+
+    private @Nullable Long trackType;
+
+    public @Nullable Long getTrackType() {
       return trackType;
     }
 
-    public void setTrackType(@NonNull Long setterArg) {
-      if (setterArg == null) {
-        throw new IllegalStateException("Nonnull field \"trackType\" is null.");
-      }
+    public void setTrackType(@Nullable Long setterArg) {
       this.trackType = setterArg;
     }
 
@@ -300,12 +294,12 @@ public class Messages {
       if (this == o) { return true; }
       if (o == null || getClass() != o.getClass()) { return false; }
       TrackSelectionsMessage that = (TrackSelectionsMessage) o;
-      return textureId.equals(that.textureId) && trackId.equals(that.trackId) && trackSelections.equals(that.trackSelections) && trackType.equals(that.trackType) && Objects.equals(trackIndex, that.trackIndex);
+      return textureId.equals(that.textureId) && trackSelections.equals(that.trackSelections) && Objects.equals(trackId, that.trackId) && Objects.equals(trackType, that.trackType) && Objects.equals(trackIndex, that.trackIndex);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(textureId, trackId, trackSelections, trackType, trackIndex);
+      return Objects.hash(textureId, trackSelections, trackId, trackType, trackIndex);
     }
 
     public static final class Builder {
@@ -318,14 +312,6 @@ public class Messages {
         return this;
       }
 
-      private @Nullable String trackId;
-
-      @CanIgnoreReturnValue
-      public @NonNull Builder setTrackId(@NonNull String setterArg) {
-        this.trackId = setterArg;
-        return this;
-      }
-
       private @Nullable List<Object> trackSelections;
 
       @CanIgnoreReturnValue
@@ -334,10 +320,18 @@ public class Messages {
         return this;
       }
 
+      private @Nullable String trackId;
+
+      @CanIgnoreReturnValue
+      public @NonNull Builder setTrackId(@Nullable String setterArg) {
+        this.trackId = setterArg;
+        return this;
+      }
+
       private @Nullable Long trackType;
 
       @CanIgnoreReturnValue
-      public @NonNull Builder setTrackType(@NonNull Long setterArg) {
+      public @NonNull Builder setTrackType(@Nullable Long setterArg) {
         this.trackType = setterArg;
         return this;
       }
@@ -353,8 +347,8 @@ public class Messages {
       public @NonNull TrackSelectionsMessage build() {
         TrackSelectionsMessage pigeonReturn = new TrackSelectionsMessage();
         pigeonReturn.setTextureId(textureId);
-        pigeonReturn.setTrackId(trackId);
         pigeonReturn.setTrackSelections(trackSelections);
+        pigeonReturn.setTrackId(trackId);
         pigeonReturn.setTrackType(trackType);
         pigeonReturn.setTrackIndex(trackIndex);
         return pigeonReturn;
@@ -365,8 +359,8 @@ public class Messages {
     ArrayList<Object> toList() {
       ArrayList<Object> toListResult = new ArrayList<>(5);
       toListResult.add(textureId);
-      toListResult.add(trackId);
       toListResult.add(trackSelections);
+      toListResult.add(trackId);
       toListResult.add(trackType);
       toListResult.add(trackIndex);
       return toListResult;
@@ -376,10 +370,10 @@ public class Messages {
       TrackSelectionsMessage pigeonResult = new TrackSelectionsMessage();
       Object textureId = pigeonVar_list.get(0);
       pigeonResult.setTextureId((Long) textureId);
-      Object trackId = pigeonVar_list.get(1);
-      pigeonResult.setTrackId((String) trackId);
-      Object trackSelections = pigeonVar_list.get(2);
+      Object trackSelections = pigeonVar_list.get(1);
       pigeonResult.setTrackSelections((List<Object>) trackSelections);
+      Object trackId = pigeonVar_list.get(2);
+      pigeonResult.setTrackId((String) trackId);
       Object trackType = pigeonVar_list.get(3);
       pigeonResult.setTrackType((Long) trackType);
       Object trackIndex = pigeonVar_list.get(4);
@@ -737,7 +731,54 @@ public class Messages {
                 try {
                   api.setMixWithOthers(mixWithOthersArg);
                   wrapped.add(0, null);
-                } catch (Throwable exception) {
+                }
+ catch (Throwable exception) {
+                  wrapped = wrapError(exception);
+                }
+                reply.reply(wrapped);
+              });
+        } else {
+          channel.setMessageHandler(null);
+        }
+      }
+      {
+        BasicMessageChannel<Object> channel =
+            new BasicMessageChannel<>(
+                binaryMessenger, "dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.trackSelections" + messageChannelSuffix, getCodec());
+        if (api != null) {
+          channel.setMessageHandler(
+              (message, reply) -> {
+                ArrayList<Object> wrapped = new ArrayList<>();
+                ArrayList<Object> args = (ArrayList<Object>) message;
+                Long textureIdArg = (Long) args.get(0);
+                try {
+                  TrackSelectionsMessage output = api.trackSelections(textureIdArg);
+                  wrapped.add(0, output);
+                }
+ catch (Throwable exception) {
+                  wrapped = wrapError(exception);
+                }
+                reply.reply(wrapped);
+              });
+        } else {
+          channel.setMessageHandler(null);
+        }
+      }
+      {
+        BasicMessageChannel<Object> channel =
+            new BasicMessageChannel<>(
+                binaryMessenger, "dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setTrackSelection" + messageChannelSuffix, getCodec());
+        if (api != null) {
+          channel.setMessageHandler(
+              (message, reply) -> {
+                ArrayList<Object> wrapped = new ArrayList<>();
+                ArrayList<Object> args = (ArrayList<Object>) message;
+                TrackSelectionsMessage msgArg = (TrackSelectionsMessage) args.get(0);
+                try {
+                  api.setTrackSelection(msgArg);
+                  wrapped.add(0, null);
+                }
+ catch (Throwable exception) {
                   wrapped = wrapError(exception);
                 }
                 reply.reply(wrapped);

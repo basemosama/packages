@@ -152,6 +152,9 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
   }
 
   private ExoPlayer createVideoPlayer() {
+
+    updateTrackSelectorParameters();
+
     ExoPlayer exoPlayer = exoPlayerProvider.get();
     exoPlayer.setMediaItem(mediaItem);
     exoPlayer.prepare();
@@ -211,10 +214,6 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
   void dispose() {
     exoPlayer.release();
     surfaceProducer.release();
-
-    trackSelectorParameters = null;
-    trackSelector = null;
-
     // TODO(matanlurey): Remove when embedder no longer calls-back once released.
     // https://github.com/flutter/flutter/issues/156434.
     surfaceProducer.setCallback(null);
@@ -245,7 +244,7 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
         for (int groupIndex = 0; groupIndex < trackGroups.length; groupIndex++) {
           TrackGroup group = trackGroups.get(groupIndex);
 
-          //add auto track for each track selection types
+////          add auto track for each track selection types
 //                    if (!autoTrackSelectionTypes.contains(trackType)) {
 //                        autoTrackSelectionTypes.add(trackType);
 //                        HashMap<String, Object> autoTrackSelection = new HashMap<>();
@@ -254,8 +253,7 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
 //                        autoTrackSelection.put("trackType", trackType);
 //                        final boolean isSelected = trackSelectorParameters.getRendererDisabled(rendererIndex);
 //
-//
-//                        Log.d("xxx auto", "isSelected" + " " + trackSelectorParameters.overrides);
+//                        Log.d("xxx auto", "isSelected" + " " + trackSelectorParameters.getRendererDisabled(rendererIndex));
 //
 //                        autoTrackSelection.put(
 //                                "isSelected",
@@ -263,7 +261,7 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
 //                        autoTrackSelection.put("trackId", Integer.toString(rendererIndex));
 //                        trackSelections.add(autoTrackSelection);
 //                    }
-
+//
           //add tracks
           for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
             HashMap<String, Object> trackSelection = new HashMap<>();

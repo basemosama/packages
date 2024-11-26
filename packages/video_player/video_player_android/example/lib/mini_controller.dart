@@ -367,6 +367,16 @@ class MiniController extends ValueNotifier<VideoPlayerValue> {
   void _updatePosition(Duration position) {
     value = value.copyWith(position: position);
   }
+
+  /// Gets the video [TrackSelection]s. For convenience if the video file has at
+  /// least one [TrackSelection] for a specific type, the auto track selection will
+  /// be added to this list with that type.
+  Future<List<TrackSelection>> getTrackSelections({
+    TrackSelectionNameResource? trackSelectionNameResource,
+  }) {
+    return _platform.getTrackSelections(textureId,
+        trackSelectionNameResource: trackSelectionNameResource);
+  }
 }
 
 /// Widget that displays the video controlled by [controller].
