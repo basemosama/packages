@@ -28,6 +28,35 @@ class EventChannelTestsError(
     val details: Any? = null
 ) : Throwable()
 
+private fun deepEqualsEventChannelTests(a: Any?, b: Any?): Boolean {
+  if (a is ByteArray && b is ByteArray) {
+    return a.contentEquals(b)
+  }
+  if (a is IntArray && b is IntArray) {
+    return a.contentEquals(b)
+  }
+  if (a is LongArray && b is LongArray) {
+    return a.contentEquals(b)
+  }
+  if (a is DoubleArray && b is DoubleArray) {
+    return a.contentEquals(b)
+  }
+  if (a is Array<*> && b is Array<*>) {
+    return a.size == b.size && a.indices.all { deepEqualsEventChannelTests(a[it], b[it]) }
+  }
+  if (a is List<*> && b is List<*>) {
+    return a.size == b.size && a.indices.all { deepEqualsEventChannelTests(a[it], b[it]) }
+  }
+  if (a is Map<*, *> && b is Map<*, *>) {
+    return a.size == b.size &&
+        a.all {
+          (b as Map<Any?, Any?>).containsKey(it.key) &&
+              deepEqualsEventChannelTests(it.value, b[it.key])
+        }
+  }
+  return a == b
+}
+
 enum class EventEnum(val raw: Int) {
   ONE(0),
   TWO(1),
@@ -193,6 +222,18 @@ data class EventAllNullableTypes(
         recursiveClassMap,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is EventAllNullableTypes) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /**
@@ -214,6 +255,18 @@ data class IntEvent(val value: Long) : PlatformEvent() {
         value,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is IntEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
@@ -230,6 +283,18 @@ data class StringEvent(val value: String) : PlatformEvent() {
         value,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is StringEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
@@ -246,6 +311,18 @@ data class BoolEvent(val value: Boolean) : PlatformEvent() {
         value,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is BoolEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
@@ -262,6 +339,18 @@ data class DoubleEvent(val value: Double) : PlatformEvent() {
         value,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is DoubleEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
@@ -278,6 +367,18 @@ data class ObjectsEvent(val value: Any) : PlatformEvent() {
         value,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is ObjectsEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
@@ -294,6 +395,18 @@ data class EnumEvent(val value: EventEnum) : PlatformEvent() {
         value,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is EnumEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
@@ -310,6 +423,18 @@ data class ClassEvent(val value: EventAllNullableTypes) : PlatformEvent() {
         value,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is ClassEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 private open class EventChannelTestsPigeonCodec : StandardMessageCodec() {

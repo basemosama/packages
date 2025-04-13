@@ -12,6 +12,35 @@ import io.flutter.plugin.common.StandardMethodCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 
+private fun deepEqualsEventChannelMessages(a: Any?, b: Any?): Boolean {
+  if (a is ByteArray && b is ByteArray) {
+    return a.contentEquals(b)
+  }
+  if (a is IntArray && b is IntArray) {
+    return a.contentEquals(b)
+  }
+  if (a is LongArray && b is LongArray) {
+    return a.contentEquals(b)
+  }
+  if (a is DoubleArray && b is DoubleArray) {
+    return a.contentEquals(b)
+  }
+  if (a is Array<*> && b is Array<*>) {
+    return a.size == b.size && a.indices.all { deepEqualsEventChannelMessages(a[it], b[it]) }
+  }
+  if (a is List<*> && b is List<*>) {
+    return a.size == b.size && a.indices.all { deepEqualsEventChannelMessages(a[it], b[it]) }
+  }
+  if (a is Map<*, *> && b is Map<*, *>) {
+    return a.size == b.size &&
+        a.all {
+          (b as Map<Any?, Any?>).containsKey(it.key) &&
+              deepEqualsEventChannelMessages(it.value, b[it.key])
+        }
+  }
+  return a == b
+}
+
 /**
  * Generated class from Pigeon that represents data sent in messages. This class should not be
  * extended by any user class outside of the generated file.
@@ -31,6 +60,18 @@ data class IntEvent(val data: Long) : PlatformEvent() {
         data,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is IntEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelMessages(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
@@ -47,6 +88,18 @@ data class StringEvent(val data: String) : PlatformEvent() {
         data,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is StringEvent) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsEventChannelMessages(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 private open class EventChannelMessagesPigeonCodec : StandardMessageCodec() {

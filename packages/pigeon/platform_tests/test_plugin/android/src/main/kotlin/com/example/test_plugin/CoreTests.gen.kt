@@ -49,6 +49,34 @@ class FlutterError(
     val details: Any? = null
 ) : Throwable()
 
+private fun deepEqualsCoreTests(a: Any?, b: Any?): Boolean {
+  if (a is ByteArray && b is ByteArray) {
+    return a.contentEquals(b)
+  }
+  if (a is IntArray && b is IntArray) {
+    return a.contentEquals(b)
+  }
+  if (a is LongArray && b is LongArray) {
+    return a.contentEquals(b)
+  }
+  if (a is DoubleArray && b is DoubleArray) {
+    return a.contentEquals(b)
+  }
+  if (a is Array<*> && b is Array<*>) {
+    return a.size == b.size && a.indices.all { deepEqualsCoreTests(a[it], b[it]) }
+  }
+  if (a is List<*> && b is List<*>) {
+    return a.size == b.size && a.indices.all { deepEqualsCoreTests(a[it], b[it]) }
+  }
+  if (a is Map<*, *> && b is Map<*, *>) {
+    return a.size == b.size &&
+        a.all {
+          (b as Map<Any?, Any?>).containsKey(it.key) && deepEqualsCoreTests(it.value, b[it.key])
+        }
+  }
+  return a == b
+}
+
 enum class AnEnum(val raw: Int) {
   ONE(0),
   TWO(1),
@@ -87,6 +115,18 @@ data class UnusedClass(val aField: Any? = null) {
         aField,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is UnusedClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsCoreTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /**
@@ -218,6 +258,18 @@ data class AllTypes(
         mapMap,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is AllTypes) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsCoreTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /**
@@ -361,6 +413,18 @@ data class AllNullableTypes(
         recursiveClassMap,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is AllNullableTypes) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsCoreTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /**
@@ -493,6 +557,18 @@ data class AllNullableTypesWithoutRecursion(
         mapMap,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is AllNullableTypesWithoutRecursion) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsCoreTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /**
@@ -544,6 +620,18 @@ data class AllClassesWrapper(
         nullableClassMap,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is AllClassesWrapper) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsCoreTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 /**
@@ -564,6 +652,18 @@ data class TestMessage(val testList: List<Any?>? = null) {
         testList,
     )
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (other !is TestMessage) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return deepEqualsCoreTests(toList(), other.toList())
+  }
+
+  override fun hashCode(): Int = toList().hashCode()
 }
 
 private open class CoreTestsPigeonCodec : StandardMessageCodec() {

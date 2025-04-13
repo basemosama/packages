@@ -1,3 +1,16 @@
+## 3.18.5
+
+* Fixes crash when sending undefined message via JavaScript channel.
+
+## 3.18.4
+
+* Fixes crash when native `WKFrameInfo.request` is nil.
+
+## 3.18.3
+
+* Fixes crash where the native `AuthenticationChallengeResponse` could not be found for auth
+  requests.
+
 ## 3.18.2
 
 * Updates generated pigeon code to ensure the internal wrapper immediately sends constructor calls.
