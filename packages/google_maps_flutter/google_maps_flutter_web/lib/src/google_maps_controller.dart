@@ -424,7 +424,16 @@ class GoogleMapController {
     return gmLatLngBoundsTolatLngBounds(bounds);
   }
 
-  /// Returns the [ScreenCoordinate] for a given viewport [LatLng].
+  /// Return the [Cluster]s of given [ClusterManagerId].
+  List<Cluster> getClusters(
+      { required ClusterManagerId clusterManagerId}) {
+    assert(_googleMap != null, 'Cannot get clusters from a null map.');
+
+    return _clusterManagersController?.getClusters(clusterManagerId) ??<Cluster>[];
+  }
+
+
+    /// Returns the [ScreenCoordinate] for a given viewport [LatLng].
   Future<ScreenCoordinate> getScreenCoordinate(LatLng latLng) async {
     assert(_googleMap != null,
         'Cannot get the screen coordinates with a null map.');

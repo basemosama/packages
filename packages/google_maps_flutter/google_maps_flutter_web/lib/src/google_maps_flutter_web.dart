@@ -171,6 +171,14 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
     return _map(mapId).getVisibleRegion();
   }
 
+  /// Return the [Cluster]s of given [ClusterManagerId].
+  Future<List<Cluster>> getClusters(
+      {required int mapId, required ClusterManagerId clusterManagerId})async {
+    return _map(mapId).getClusters( clusterManagerId:clusterManagerId);
+
+  }
+
+
   /// Returns the screen coordinate (in pixels) of a given `latLng`.
   @override
   Future<ScreenCoordinate> getScreenCoordinate(
@@ -378,4 +386,6 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
       (int mapId) => _map(mapId).groundOverlayController,
     );
   }
+
+
 }
