@@ -388,23 +388,28 @@ void _cleanUpBitmapConversionCaches() {
 }
 
 Future<String> _rotateImageUrl(String url, double rotationDegrees) async {
-  if (rotationDegrees == 0) {
-    return url;
-  }
-  final HTMLImageElement img = ImageElement()..src = url;
+  // if (rotationDegrees == 0) {
+  //   return url;
+  // }
+
+  final HTMLImageElement img = HTMLImageElement()..src = url;
   await img.onLoad.first;
 
-  final HTMLCanvasElement canvas = CanvasElement()
-    ..width = img.width
-    ..height = img.height;
-  final CanvasRenderingContext2D ctx = canvas.context2D;
+  final int w = img.width;
+  final int h = img.height;
+  final int diagonal =sqrt( w * w + h * h).ceil();
 
-  final double cx = img.width / 2;
-  final double cy = img.height / 2;
+  final HTMLCanvasElement canvas = HTMLCanvasElement()
+    ..width = diagonal
+    ..height = diagonal;
+
+  final CanvasRenderingContext2D ctx = canvas.context2D;
+  final double cx = diagonal / 2;
+  final double cy = diagonal / 2;
 
   ctx.translate(cx, cy);
   ctx.rotate(rotationDegrees * 3.1415926535 / 180);
-  ctx.drawImage(img, -cx, -cy);
+  ctx.drawImage(img, -w / 2, -h / 2);
 
   return canvas.toDataUrl('image/png');
 }
@@ -419,7 +424,6 @@ Future<gmaps.Icon?> _gmIconFromBitmapDescriptor(
     final String rotatedUrl = await _rotateImageUrl(url, rotation);
 
     icon = gmaps.Icon()..url = rotatedUrl;
-
     switch (bitmapDescriptor.bitmapScaling) {
       case MapBitmapScaling.auto:
         final Size? size = await _getBitmapSize(bitmapDescriptor, rotatedUrl);
