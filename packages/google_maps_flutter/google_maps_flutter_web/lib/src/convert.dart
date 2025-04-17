@@ -387,19 +387,42 @@ void _cleanUpBitmapConversionCaches() {
   _bitmapBlobUrlCache.clear();
 }
 
+Future<String> _rotateImageUrl(String url, double rotationDegrees) async {
+  if (rotationDegrees == 0) {
+    return url;
+  }
+  final HTMLImageElement img = ImageElement()..src = url;
+  await img.onLoad.first;
+
+  final HTMLCanvasElement canvas = CanvasElement()
+    ..width = img.width
+    ..height = img.height;
+  final CanvasRenderingContext2D ctx = canvas.context2D;
+
+  final double cx = img.width / 2;
+  final double cy = img.height / 2;
+
+  ctx.translate(cx, cy);
+  ctx.rotate(rotationDegrees * 3.1415926535 / 180);
+  ctx.drawImage(img, -cx, -cy);
+
+  return canvas.toDataUrl('image/png');
+}
+
 // Converts a [BitmapDescriptor] into a [gmaps.Icon] that can be used in Markers.
 Future<gmaps.Icon?> _gmIconFromBitmapDescriptor(
-    BitmapDescriptor bitmapDescriptor, Offset anchor) async {
+    BitmapDescriptor bitmapDescriptor, Offset anchor, double rotation) async {
   gmaps.Icon? icon;
 
   if (bitmapDescriptor is MapBitmap) {
     final String url = urlFromMapBitmap(bitmapDescriptor);
+    final String rotatedUrl = await _rotateImageUrl(url, rotation);
 
-    icon = gmaps.Icon()..url = url;
+    icon = gmaps.Icon()..url = rotatedUrl;
 
     switch (bitmapDescriptor.bitmapScaling) {
       case MapBitmapScaling.auto:
-        final Size? size = await _getBitmapSize(bitmapDescriptor, url);
+        final Size? size = await _getBitmapSize(bitmapDescriptor, rotatedUrl);
         if (size != null) {
           _setIconSize(size: size, icon: icon);
           _setIconAnchor(size: size, anchor: anchor, icon: icon);
@@ -441,7 +464,10 @@ Future<gmaps.Icon?> _gmIconFromBitmapDescriptor(
     // See https://github.com/dart-lang/web/issues/180
     blob = Blob(<JSUint8Array>[(bytes as Uint8List).toJS].toJS);
 
-    icon = gmaps.Icon()..url = URL.createObjectURL(blob as JSObject);
+    final String url = URL.createObjectURL(blob as JSObject);
+    final String rotatedUrl = await _rotateImageUrl(url, rotation);
+
+    icon = gmaps.Icon()..url = rotatedUrl;
 
     final gmaps.Size? size = _gmSizeFromIconConfig(iconConfig, 2);
     if (size != null) {
@@ -469,7 +495,8 @@ Future<gmaps.MarkerOptions> _markerOptionsFromMarker(
     ..visible = marker.visible
     ..opacity = marker.alpha
     ..draggable = marker.draggable
-    ..icon = await _gmIconFromBitmapDescriptor(marker.icon, marker.anchor);
+    ..icon = await _gmIconFromBitmapDescriptor(
+        marker.icon, marker.anchor, marker.rotation);
   // TODO(ditman): Compute anchor properly, otherwise infowindows attach to the wrong spot.
   // Flat and Rotation are not supported directly on the web.
 }
