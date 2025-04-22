@@ -706,6 +706,11 @@ NSObject<FlutterMessageCodec> *FGMGetMessagesCodec(void);
                           changing:(NSArray<FGMPlatformTileOverlay *> *)toChange
                           removing:(NSArray<NSString *> *)idsToRemove
                              error:(FlutterError *_Nullable *_Nonnull)error;
+/// Updates the set of ground overlays on the map.
+- (void)updateGroundOverlaysByAdding:(NSArray<FGMPlatformGroundOverlay *> *)toAdd
+                            changing:(NSArray<FGMPlatformGroundOverlay *> *)toChange
+                            removing:(NSArray<NSString *> *)idsToRemove
+                               error:(FlutterError *_Nullable *_Nonnull)error;
 /// Gets the screen coordinate for the given map location.
 ///
 /// @return `nil` only when `error != nil`.
@@ -821,6 +826,9 @@ extern void SetUpFGMMapsApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger
 /// Called when a polyline is tapped.
 - (void)didTapPolylineWithIdentifier:(NSString *)polylineId
                           completion:(void (^)(FlutterError *_Nullable))completion;
+/// Called when a ground overlay is tapped.
+- (void)didTapGroundOverlayWithIdentifier:(NSString *)groundOverlayId
+                               completion:(void (^)(FlutterError *_Nullable))completion;
 /// Called to get data for a map tile.
 - (void)tileWithOverlayIdentifier:(NSString *)tileOverlayId
                          location:(FGMPlatformPoint *)location
