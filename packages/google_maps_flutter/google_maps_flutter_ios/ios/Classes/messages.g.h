@@ -751,6 +751,12 @@ NSObject<FlutterMessageCodec> *FGMGetMessagesCodec(void);
 - (nullable NSNumber *)
     isShowingInfoWindowForMarkerWithIdentifier:(NSString *)markerId
                                          error:(FlutterError *_Nullable *_Nonnull)error;
+
+/// Gets the current map clusters.
+///
+/// @return `nil` only when `error != nil`.
+- (nullable NSArray<FGMPlatformCluster *> *)getClusters:(NSString *)clusterManagerId error:(FlutterError *_Nullable *_Nonnull)error;
+
 /// Sets the style to the given map style string, where an empty string
 /// indicates that the style should be cleared.
 ///
