@@ -80,6 +80,25 @@ enum ConsoleMessageLevel {
   unknown,
 }
 
+/// The over-scroll mode for a view.
+///
+/// See https://developer.android.com/reference/android/view/View#OVER_SCROLL_ALWAYS.
+enum OverScrollMode {
+  /// Always allow a user to over-scroll this view, provided it is a view that
+  /// can scroll.
+  always,
+
+  /// Allow a user to over-scroll this view only if the content is large enough
+  /// to meaningfully scroll, provided it is a view that can scroll.
+  ifContentScrolls,
+
+  /// Never allow a user to over-scroll this view.
+  never,
+
+  /// The type is not recognized by this wrapper.
+  unknown,
+}
+
 /// Type of error for a SslCertificate.
 ///
 /// See https://developer.android.com/reference/android/net/http/SslError#SSL_DATE_INVALID.
@@ -832,6 +851,19 @@ abstract class View {
 
   /// Return the scrolled position of this view.
   WebViewPoint getScrollPosition();
+
+  /// Define whether the vertical scrollbar should be drawn or not.
+  ///
+  /// The scrollbar is not drawn by default.
+  void setVerticalScrollBarEnabled(bool enabled);
+
+  /// Define whether the horizontal scrollbar should be drawn or not.
+  ///
+  /// The scrollbar is not drawn by default.
+  void setHorizontalScrollBarEnabled(bool enabled);
+
+  /// Set the over-scroll mode for this view.
+  void setOverScrollMode(OverScrollMode mode);
 }
 
 /// A callback interface used by the host application to set the Geolocation
@@ -929,7 +961,7 @@ abstract class PrivateKey {}
     fullClassName: 'java.security.cert.X509Certificate',
   ),
 )
-abstract class X509Certificate {}
+abstract class X509Certificate extends Certificate {}
 
 /// Represents a request for handling an SSL error.
 ///
@@ -1025,4 +1057,17 @@ abstract class SslCertificate {
   ///
   /// Always returns null on Android versions below Q.
   X509Certificate? getX509Certificate();
+}
+
+/// Abstract class for managing a variety of identity certificates.
+///
+/// See https://developer.android.com/reference/java/security/cert/Certificate.
+@ProxyApi(
+  kotlinOptions: KotlinProxyApiOptions(
+    fullClassName: 'java.security.cert.Certificate',
+  ),
+)
+abstract class Certificate {
+  /// The encoded form of this certificate.
+  Uint8List getEncoded();
 }

@@ -1,3 +1,13 @@
+## 25.3.2
+
+* [dart] Fixes null pointer crashes/exceptions caused by premature finalization of Dart instances
+  for ProxyApis.
+
+## 25.3.1
+
+* [kotlin] Fixes Kotlin InstanceManager not properly removing callbacks from handler.
+* [kotlin] Fixes `SyntheticAccessor` lint caused by private utility methods.
+
 ## 25.3.0
 
 * [swift] Adds equality methods to generated data classes.
