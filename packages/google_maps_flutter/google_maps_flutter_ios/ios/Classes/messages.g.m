@@ -2410,7 +2410,27 @@ void SetUpFGMMapsApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger,
       [channel setMessageHandler:nil];
     }
   }
-  /// Sets the style to the given map style string, where an empty string
+    /// Gets the current map clusters.
+    {
+        FlutterBasicMessageChannel *channel =
+                [[FlutterBasicMessageChannel alloc]
+                        initWithName:[NSString stringWithFormat:@"%@%@", @"dev.flutter.pigeon.google_maps_flutter_ios.MapsApi.getClusters", messageChannelSuffix]
+                     binaryMessenger:binaryMessenger
+                               codec:FGMGetMessagesCodec()];
+        if (api) {
+            NSCAssert([api respondsToSelector:@selector(getClusters:error:)], @"FGMMapsApi api (%@) doesn't respond to @selector(getClusters:error:)", api);
+            [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+                NSArray<id> *args = message;
+                NSString *arg_clusterManagerId = GetNullableObjectAtIndex(args, 0);
+                FlutterError *error;
+                NSArray<FGMPlatformCluster *> *output = [api getClusters:arg_clusterManagerId error:&error];
+                callback(wrapResult(output, error));
+            }];
+        } else {
+            [channel setMessageHandler:nil];
+        }
+    }
+    /// Sets the style to the given map style string, where an empty string
   /// indicates that the style should be cleared.
   ///
   /// If there was an error setting the style, such as an invalid style string,
