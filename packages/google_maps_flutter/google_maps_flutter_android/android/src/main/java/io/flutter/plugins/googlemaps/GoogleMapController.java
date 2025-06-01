@@ -1000,9 +1000,6 @@ class GoogleMapController
     return (double) googleMap.getCameraPosition().zoom;
   }
 
-
-
-
   @Override
   public void showInfoWindow(@NonNull String markerId) {
     markersController.showMarkerInfoWindow(markerId);

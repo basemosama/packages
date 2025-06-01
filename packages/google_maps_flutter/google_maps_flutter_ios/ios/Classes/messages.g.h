@@ -582,15 +582,13 @@ typedef NS_ENUM(NSUInteger, FGMPlatformMapBitmapScaling) {
 @property(nonatomic, strong) id bitmap;
 @end
 
-/// Pigeon equivalent of [DefaultMarker]. See
-/// https://developers.google.com/maps/documentation/android-sdk/reference/com/google/android/libraries/maps/model/BitmapDescriptorFactory#defaultMarker(float)
+/// Pigeon equivalent of [DefaultMarker].
 @interface FGMPlatformBitmapDefaultMarker : NSObject
 + (instancetype)makeWithHue:(nullable NSNumber *)hue;
 @property(nonatomic, strong, nullable) NSNumber *hue;
 @end
 
-/// Pigeon equivalent of [BytesBitmap]. See
-/// https://developers.google.com/maps/documentation/android-sdk/reference/com/google/android/libraries/maps/model/BitmapDescriptorFactory#fromBitmap(android.graphics.Bitmap)
+/// Pigeon equivalent of [BytesBitmap].
 @interface FGMPlatformBitmapBytes : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;
@@ -600,8 +598,7 @@ typedef NS_ENUM(NSUInteger, FGMPlatformMapBitmapScaling) {
 @property(nonatomic, strong, nullable) FGMPlatformSize *size;
 @end
 
-/// Pigeon equivalent of [AssetBitmap]. See
-/// https://developers.google.com/maps/documentation/android-sdk/reference/com/google/android/libraries/maps/model/BitmapDescriptorFactory#public-static-bitmapdescriptor-fromasset-string-assetname
+/// Pigeon equivalent of [AssetBitmap].
 @interface FGMPlatformBitmapAsset : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;
@@ -610,8 +607,7 @@ typedef NS_ENUM(NSUInteger, FGMPlatformMapBitmapScaling) {
 @property(nonatomic, copy, nullable) NSString *pkg;
 @end
 
-/// Pigeon equivalent of [AssetImageBitmap]. See
-/// https://developers.google.com/maps/documentation/android-sdk/reference/com/google/android/libraries/maps/model/BitmapDescriptorFactory#public-static-bitmapdescriptor-fromasset-string-assetname
+/// Pigeon equivalent of [AssetImageBitmap].
 @interface FGMPlatformBitmapAssetImage : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;

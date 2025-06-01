@@ -1753,7 +1753,7 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is PlatformBitmapBytesMap) {
       buffer.putUint8(174);
       writeValue(buffer, value.encode());
-    }else {
+    } else {
       super.writeValue(buffer, value);
     }
   }
