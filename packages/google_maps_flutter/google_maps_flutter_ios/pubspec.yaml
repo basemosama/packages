@@ -23,7 +23,7 @@ dependencies:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_platform_interface
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map2
   stream_transform: ^2.0.0
 
 dev_dependencies:

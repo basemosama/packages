@@ -25,22 +25,22 @@ dependencies:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_android
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map2
   google_maps_flutter_ios:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_ios
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map2
   google_maps_flutter_platform_interface:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_platform_interface
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map2
   google_maps_flutter_web:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_web
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map2
 
 
 dev_dependencies:
