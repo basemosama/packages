@@ -2,11 +2,11 @@ name: google_maps_flutter
 description: A Flutter plugin for integrating Google Maps in iOS and Android applications.
 repository: https://github.com/flutter/packages/tree/main/packages/google_maps_flutter/google_maps_flutter
 issue_tracker: https://github.com/flutter/flutter/issues?q=is%3Aissue+is%3Aopen+label%3A%22p%3A+maps%22
-version: 2.12.2
+version: 2.14.1
 
 environment:
-  sdk: ^3.6.0
-  flutter: ">=3.27.0"
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
 
 flutter:
   plugin:
@@ -25,22 +25,22 @@ dependencies:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_android
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map_latest
   google_maps_flutter_ios:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_ios
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map_latest
   google_maps_flutter_platform_interface:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_platform_interface
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map_latest
   google_maps_flutter_web:
     git:
       url: https://github.com/basemosama/packages.git
       path: packages/google_maps_flutter/google_maps_flutter_web
-      ref: feat_add_get_clusters_to_map
+      ref: feat_add_get_clusters_to_map_latest
 
 
 dev_dependencies:
