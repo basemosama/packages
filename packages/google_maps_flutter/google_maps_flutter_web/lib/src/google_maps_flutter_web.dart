@@ -118,6 +118,14 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
   }
 
   @override
+  Future<List<Cluster>> getClusters({
+    required int mapId,
+    required ClusterManagerId clusterManagerId,
+  }) async {
+    return _map(mapId).clusterManagersController.getClusters(clusterManagerId);
+  }
+
+  @override
   Future<void> updateGroundOverlays(
     GroundOverlayUpdates groundOverlayUpdates, {
     required int mapId,
@@ -302,6 +310,13 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
   @override
   Stream<ClusterTapEvent> onClusterTap({required int mapId}) {
     return _events(mapId).whereType<ClusterTapEvent>();
+  }
+
+  @override
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({
+    required int mapId,
+  }) {
+    return _events(mapId).whereType<ClusterManagerUpdateEvent>();
   }
 
   @override

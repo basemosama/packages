@@ -48,6 +48,11 @@ class ClusterManagersController<T extends Object> extends GeometryController {
   final Map<ClusterManagerId, MarkerClusterer<T>>
   _clusterManagerIdToMarkerClusterer;
 
+  // Track stream subscriptions for clustering lifecycle events.
+  final Map<ClusterManagerId, StreamSubscription<ClusteringEvent>>
+  _clustererSubscriptions =
+      <ClusterManagerId, StreamSubscription<ClusteringEvent>>{};
+
   /// Adds a set of [ClusterManager] objects to the cache.
   void addClusterManagers(Set<ClusterManager> clusterManagersToAdd) {
     clusterManagersToAdd.forEach(_addClusterManager);
@@ -66,6 +71,22 @@ class ClusterManagersController<T extends Object> extends GeometryController {
 
     _clusterManagerIdToMarkerClusterer[clusterManager.clusterManagerId] =
         markerClusterer;
+
+    _clustererSubscriptions[clusterManager.clusterManagerId] =
+        getClustererEvents(clusterManager.clusterManagerId)!.listen((
+          ClusteringEvent event,
+        ) {
+          if (event == ClusteringEvent.end) {
+            _streamController.add(
+              ClusterManagerUpdateEvent(
+                mapId,
+                getClusters(clusterManager.clusterManagerId),
+                clusterManagerId: clusterManager.clusterManagerId,
+              ),
+            );
+          }
+        });
+
     markerClusterer.onAdd();
   }
 
@@ -78,6 +99,8 @@ class ClusterManagersController<T extends Object> extends GeometryController {
     final MarkerClusterer<T>? markerClusterer =
         _clusterManagerIdToMarkerClusterer[clusterManagerId];
     if (markerClusterer != null) {
+      _clustererSubscriptions[clusterManagerId]?.cancel();
+      _clustererSubscriptions.remove(clusterManagerId);
       markerClusterer.clearMarkers(true);
       markerClusterer.onRemove();
     }

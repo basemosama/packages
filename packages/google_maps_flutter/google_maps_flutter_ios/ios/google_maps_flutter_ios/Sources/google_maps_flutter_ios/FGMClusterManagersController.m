@@ -71,6 +71,9 @@
   for (GMUClusterManager *clusterManager in [self.clusterManagerIdentifierToManagers allValues]) {
     [clusterManager cluster];
   }
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self dispatchClusterManagerUpdates];
+  });
 }
 
 - (nullable NSArray<FGMPlatformCluster *> *)
@@ -107,6 +110,19 @@
   }
   FGMPlatformCluster *platFormCluster = FGMGetPigeonCluster(cluster, clusterManagerId);
   [self.eventDelegate didTapCluster:platFormCluster];
+}
+
+- (void)dispatchClusterManagerUpdates {
+  for (NSString *clusterManagerId in [self.clusterManagerIdentifierToManagers allKeys]) {
+    NSArray<FGMPlatformCluster *> *clusters = [self clustersWithIdentifier:clusterManagerId
+                                                                     error:nil];
+    if (clusters.count > 0) {
+      if ([self.eventDelegate respondsToSelector:@selector(didUpdateClusterManagersWithIdentifier:clusters:)]) {
+        [self.eventDelegate didUpdateClusterManagersWithIdentifier:clusterManagerId
+                                                          clusters:clusters];
+      }
+    }
+  }
 }
 
 #pragma mark - Private methods

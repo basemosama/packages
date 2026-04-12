@@ -173,6 +173,13 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     return _events(mapId).whereType<ClusterTapEvent>();
   }
 
+  @override
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({
+    required int mapId,
+  }) {
+    return _events(mapId).whereType<ClusterManagerUpdateEvent>();
+  }
+
   Future<dynamic> _handleMethodCall(MethodCall call, int mapId) async {
     switch (call.method) {
       case 'camera#onMoveStarted':
@@ -305,6 +312,52 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
             ),
           ),
         );
+      case 'cluster#onClusterManagerUpdate':
+        final Map<String, Object?> arguments = _getArgumentDictionary(call);
+        final clusterManagerId = ClusterManagerId(
+          arguments['clusterManagerId']! as String,
+        );
+        final List<Cluster> clusters = (arguments['clusters']! as List<dynamic>)
+            .cast<Map<dynamic, dynamic>>()
+            .map((dynamic clusterMap) {
+              final positionData =
+                  clusterMap['position'] as Map<dynamic, dynamic>;
+              final LatLng position = LatLng.fromJson(positionData)!;
+
+              final Map<String, List<dynamic>> latLngData =
+                  (clusterMap['bounds']! as Map<dynamic, dynamic>).map(
+                    (dynamic key, dynamic object) =>
+                        MapEntry<String, List<dynamic>>(
+                          key as String,
+                          object as List<dynamic>,
+                        ),
+                  );
+
+              final bounds = LatLngBounds(
+                northeast: LatLng.fromJson(latLngData['northeast'])!,
+                southwest: LatLng.fromJson(latLngData['southwest'])!,
+              );
+
+              final List<MarkerId> markerIds =
+                  (clusterMap['markerIds']! as List<dynamic>)
+                      .map((dynamic markerId) => MarkerId(markerId as String))
+                      .toList();
+              return Cluster(
+                clusterManagerId,
+                markerIds,
+                position: position,
+                bounds: bounds,
+              );
+            })
+            .toList();
+
+        _mapEventStreamController.add(
+          ClusterManagerUpdateEvent(
+            mapId,
+            clusters,
+            clusterManagerId: clusterManagerId,
+          ),
+        );
       default:
         throw MissingPluginException();
     }
@@ -405,6 +458,47 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
       'clusterManagers#update',
       clusterManagerUpdates.toJson(),
     );
+  }
+
+  @override
+  Future<List<Cluster>> getClusters({
+    required int mapId,
+    required ClusterManagerId clusterManagerId,
+  }) async {
+    final List<dynamic> clustersData = (await channel(mapId)
+        .invokeMethod<List<dynamic>>(
+          'clusterManagers#getClusters',
+          <String, Object>{'clusterManagerId': clusterManagerId.value},
+        ))!;
+
+    return clustersData.cast<Map<dynamic, dynamic>>().map((dynamic clusterMap) {
+      final positionData = clusterMap['position'] as Map<dynamic, dynamic>;
+      final LatLng position = LatLng.fromJson(positionData)!;
+
+      final Map<String, List<dynamic>> latLngData =
+          (clusterMap['bounds']! as Map<dynamic, dynamic>).map(
+            (dynamic key, dynamic object) => MapEntry<String, List<dynamic>>(
+              key as String,
+              object as List<dynamic>,
+            ),
+          );
+
+      final bounds = LatLngBounds(
+        northeast: LatLng.fromJson(latLngData['northeast'])!,
+        southwest: LatLng.fromJson(latLngData['southwest'])!,
+      );
+
+      final List<MarkerId> markerIds =
+          (clusterMap['markerIds']! as List<dynamic>)
+              .map((dynamic markerId) => MarkerId(markerId as String))
+              .toList();
+      return Cluster(
+        clusterManagerId,
+        markerIds,
+        position: position,
+        bounds: bounds,
+      );
+    }).toList();
   }
 
   @override

@@ -37,13 +37,17 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return A cluster manager if found; otherwise, nil.
 - (nullable GMUClusterManager *)clusterManagerWithIdentifier:(NSString *)identifier;
 
-/// Returns an array of clusters managed by the cluster manager.
+/// Returns the clusters managed by the cluster manager with the given identifier, or an error if
+/// the cluster manager does not exist.
 ///
 /// @param identifier The identifier of the cluster manager whose clusters are to be retrieved.
 /// @return An array of clusters. Returns `nil` only if `error` is populated.
 - (nullable NSArray<FGMPlatformCluster *> *)
     clustersWithIdentifier:(NSString *)identifier
                      error:(FlutterError *_Nullable __autoreleasing *_Nonnull)error;
+
+/// Dispatches cluster manager updates to the event delegate.
+- (void)dispatchClusterManagerUpdates;
 
 /// Called when a cluster marker is tapped on the map.
 ///

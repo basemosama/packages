@@ -19,7 +19,11 @@ class ClusterManagerId extends MapsObjectId<ClusterManager> {
 @immutable
 class ClusterManager implements MapsObject<ClusterManager> {
   /// Creates an immutable object for managing clustering for set of markers.
-  const ClusterManager({required this.clusterManagerId, this.onClusterTap});
+  const ClusterManager({
+    required this.clusterManagerId,
+    this.onClusterTap,
+    this.onClustersUpdated,
+  });
 
   /// Uniquely identifies a [ClusterManager].
   final ClusterManagerId clusterManagerId;
@@ -30,12 +34,21 @@ class ClusterManager implements MapsObject<ClusterManager> {
   /// Callback to receive tap events for cluster markers placed on this map.
   final ArgumentCallback<Cluster>? onClusterTap;
 
+  /// Callback to receive cluster update events.
+  ///
+  /// This is called when clustering is performed (e.g. on camera idle, or adding/removing markers).
+  final ArgumentCallback<List<Cluster>>? onClustersUpdated;
+
   /// Creates a new [ClusterManager] object whose values are the same as this instance,
   /// unless overwritten by the specified parameters.
-  ClusterManager copyWith({ArgumentCallback<Cluster>? onClusterTapParam}) {
+  ClusterManager copyWith({
+    ArgumentCallback<Cluster>? onClusterTapParam,
+    ArgumentCallback<List<Cluster>>? onClustersUpdatedParam,
+  }) {
     return ClusterManager(
       clusterManagerId: clusterManagerId,
       onClusterTap: onClusterTapParam ?? onClusterTap,
+      onClustersUpdated: onClustersUpdatedParam ?? onClustersUpdated,
     );
   }
 
@@ -72,6 +85,6 @@ class ClusterManager implements MapsObject<ClusterManager> {
 
   @override
   String toString() {
-    return 'Cluster{clusterManagerId: $clusterManagerId, onClusterTap: $onClusterTap}';
+    return 'ClusterManager{clusterManagerId: $clusterManagerId, onClusterTap: $onClusterTap, onClustersUpdated: $onClustersUpdated}';
   }
 }

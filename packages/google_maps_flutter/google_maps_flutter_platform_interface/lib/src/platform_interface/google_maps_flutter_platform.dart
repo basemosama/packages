@@ -172,6 +172,14 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
     );
   }
 
+  /// Returns current clusters from [ClusterManager].
+  Future<List<Cluster>> getClusters({
+    required int mapId,
+    required ClusterManagerId clusterManagerId,
+  }) {
+    throw UnimplementedError('getClusters() has not been implemented.');
+  }
+
   /// Updates ground overlay configuration.
   ///
   /// The returned [Future] completes once the update has been made on the
@@ -397,6 +405,15 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
   /// A marker icon managed by [ClusterManager] has been tapped.
   Stream<ClusterTapEvent> onClusterTap({required int mapId}) {
     throw UnimplementedError('onClusterTap() has not been implemented.');
+  }
+
+  /// Clusters managed by [ClusterManager] have been updated.
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({
+    required int mapId,
+  }) {
+    throw UnimplementedError(
+      'onClusterManagerUpdate() has not been implemented.',
+    );
   }
 
   /// A [GroundOverlay] has been tapped.

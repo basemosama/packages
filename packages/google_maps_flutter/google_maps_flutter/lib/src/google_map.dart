@@ -744,6 +744,25 @@ class _GoogleMapState extends State<GoogleMap> {
       onClusterTap(cluster);
     }
   }
+
+  void onClusterManagerUpdate(
+    ClusterManagerId clusterManagerId,
+    List<Cluster> clusters,
+  ) {
+    final ClusterManager? clusterManager = _clusterManagers[clusterManagerId];
+    if (clusterManager == null) {
+      throw UnknownMapObjectIdError(
+        'clusterManager',
+        clusterManagerId,
+        'onClusterManagerUpdate',
+      );
+    }
+    final ArgumentCallback<List<Cluster>>? onClustersUpdated =
+        clusterManager.onClustersUpdated;
+    if (onClustersUpdated != null) {
+      onClustersUpdated(clusters);
+    }
+  }
 }
 
 /// Builds a [MapConfiguration] from the given [map].

@@ -229,6 +229,13 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
   }
 
   @override
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({
+    required int mapId,
+  }) {
+    return _events(mapId).whereType<ClusterManagerUpdateEvent>();
+  }
+
+  @override
   Future<void> updateMapConfiguration(
     MapConfiguration configuration, {
     required int mapId,
@@ -356,6 +363,19 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
           .map((ClusterManagerId id) => id.value)
           .toList(),
     );
+  }
+
+  @override
+  Future<List<Cluster>> getClusters({
+    required int mapId,
+    required ClusterManagerId clusterManagerId,
+  }) async {
+    final List<PlatformCluster> platformClusters = await _hostApi(
+      mapId,
+    ).getClusters(clusterManagerId.value);
+    return platformClusters
+        .map(GoogleMapsFlutterAndroid.clusterFromPlatformCluster)
+        .toList();
   }
 
   @override
@@ -1240,13 +1260,23 @@ class HostMapMessageHandler implements MapsCallbackApi {
     streamController.add(
       ClusterTapEvent(
         mapId,
-        Cluster(
-          ClusterManagerId(cluster.clusterManagerId),
-          // See comment in messages.dart for why this is force-unwrapped.
-          cluster.markerIds.map((String? id) => MarkerId(id!)).toList(),
-          position: _latLngFromPlatformLatLng(cluster.position),
-          bounds: _latLngBoundsFromPlatformLatLngBounds(cluster.bounds),
-        ),
+        GoogleMapsFlutterAndroid.clusterFromPlatformCluster(cluster),
+      ),
+    );
+  }
+
+  @override
+  void onClusterManagersUpdated(
+    String clusterManagerId,
+    List<PlatformCluster> clusters,
+  ) {
+    streamController.add(
+      ClusterManagerUpdateEvent(
+        mapId,
+        clusters
+            .map(GoogleMapsFlutterAndroid.clusterFromPlatformCluster)
+            .toList(),
+        clusterManagerId: ClusterManagerId(clusterManagerId),
       ),
     );
   }
