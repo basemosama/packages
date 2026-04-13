@@ -122,7 +122,10 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
     required int mapId,
     required ClusterManagerId clusterManagerId,
   }) async {
-    return _map(mapId).clusterManagersController.getClusters(clusterManagerId);
+    return _map(
+          mapId,
+        ).clusterManagersController?.getClusters(clusterManagerId) ??
+        [];
   }
 
   @override

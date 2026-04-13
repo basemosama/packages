@@ -1219,6 +1219,20 @@ class HostMapMessageHandler implements MapsCallbackApi {
       MapTapEvent(mapId, _latLngFromPlatformLatLng(position)),
     );
   }
+
+  @override
+  void onClusterManagersUpdated(
+    String clusterManagerId,
+    List<PlatformCluster> clusters,
+  ) {
+    streamController.add(
+      ClusterManagerUpdateEvent(
+        mapId,
+        clusters.map(GoogleMapsFlutterIOS.clusterFromPlatformCluster).toList(),
+        clusterManagerId: ClusterManagerId(clusterManagerId),
+      ),
+    );
+  }
 }
 
 PlatformColor _platformColorFromColor(Color color) {
