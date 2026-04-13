@@ -652,10 +652,38 @@ Future<web.Node?> _advancedMarkerIconFromBitmapDescriptor(
   return null;
 }
 
+Future<String> _rotateImageUrl(String url, double rotationDegrees) async {
+  // if (rotationDegrees == 0) {
+  //   return url;
+  // }
+
+  final web.HTMLImageElement img = web.HTMLImageElement()..src = url;
+  await img.onLoad.first;
+
+  final int w = img.width;
+  final int h = img.height;
+  final int diagonal = sqrt(w * w + h * h).ceil();
+
+  final web.HTMLCanvasElement canvas = web.HTMLCanvasElement()
+    ..width = diagonal
+    ..height = diagonal;
+
+  final web.CanvasRenderingContext2D ctx = canvas.context2D;
+  final double cx = diagonal / 2;
+  final double cy = diagonal / 2;
+
+  ctx.translate(cx, cy);
+  ctx.rotate(rotationDegrees * 3.1415926535 / 180);
+  ctx.drawImage(img, -w / 2, -h / 2);
+
+  return canvas.toDataUrl('image/png');
+}
+
 // Converts a [BitmapDescriptor] into a [gmaps.Icon] that can be used in Markers.
 Future<gmaps.Icon?> _gmIconFromBitmapDescriptor(
   BitmapDescriptor bitmapDescriptor,
   Offset anchor,
+  double rotation,
 ) async {
   gmaps.Icon? icon;
 
@@ -677,12 +705,16 @@ Future<gmaps.Icon?> _gmIconFromBitmapDescriptor(
       ),
       _ => throw UnimplementedError(),
     };
+    final String rotatedUrl = await _rotateImageUrl(url, rotation);
 
-    icon = gmaps.Icon()..url = url;
+    icon = gmaps.Icon()..url = rotatedUrl;
 
     switch (bitmapDescriptor.bitmapScaling) {
       case MapBitmapScaling.auto:
-        final gmaps.Size? size = await _getBitmapSize(bitmapDescriptor, url);
+        final gmaps.Size? size = await _getBitmapSize(
+          bitmapDescriptor,
+          rotatedUrl,
+        );
         if (size != null) {
           _setIconSize(size: size, icon: icon);
           _setIconAnchor(size: size, anchor: anchor, icon: icon);
@@ -768,7 +800,11 @@ Future<O> _markerOptionsFromMarker<T, O>(
         marker.position.latitude,
         marker.position.longitude,
       )
-      ..icon = await _gmIconFromBitmapDescriptor(marker.icon, marker.anchor)
+      ..icon = await _gmIconFromBitmapDescriptor(
+        marker.icon,
+        marker.anchor,
+        marker.rotation,
+      )
       ..title = sanitizeHtml(marker.infoWindow.title ?? '')
       ..zIndex = marker.zIndex
       ..visible = marker.visible
