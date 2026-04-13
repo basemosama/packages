@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 @import GoogleMaps;
+@import GoogleMapsUtils;
+
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -34,4 +36,13 @@ extern NSString *_Nullable FGMGetMarkerIdentifierFromMarker(GMSMarker *marker);
 /// @return The cluster manager identifier if found; otherwise, nil.
 extern NSString *_Nullable FGMGetClusterManagerIdentifierFromMarker(GMSMarker *marker);
 
+/// Category extension to GMSMarker to conform to GMUClusterItem.
+@interface GMSMarker (ClusterItem) <GMUClusterItem>
+@end
+
+/// Category extension to GMSAdvancedMarker to conform to GMUClusterItem.
+@interface GMSAdvancedMarker (ClusterItem) <GMUClusterItem>
+@end
+
 NS_ASSUME_NONNULL_END
+

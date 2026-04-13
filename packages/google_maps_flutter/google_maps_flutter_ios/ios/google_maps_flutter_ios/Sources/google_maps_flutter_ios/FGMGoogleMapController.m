@@ -519,7 +519,7 @@
 
 - (void)mapView:(GMSMapView *)mapView idleAtCameraPosition:(GMSCameraPosition *)position {
   [self.mapEventHandler didIdleCamera];
-  [self.clusterManagersController dispatchClusterManagerUpdates];
+  [self.clusterManagersController invokeClusteringForEachClusterManager];
 }
 
 - (BOOL)mapView:(GMSMapView *)mapView didTapMarker:(GMSMarker *)marker {
