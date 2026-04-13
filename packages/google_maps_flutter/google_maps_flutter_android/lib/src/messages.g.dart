@@ -4459,23 +4459,13 @@ class MapsInspectorApi {
       <Object?>[clusterManagerId],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-    if (pigeonVar_replyList == null) {
-      throw _createConnectionError(pigeonVar_channelName);
-    } else if (pigeonVar_replyList.length > 1) {
-      throw PlatformException(
-        code: pigeonVar_replyList[0]! as String,
-        message: pigeonVar_replyList[1] as String?,
-        details: pigeonVar_replyList[2],
-      );
-    } else if (pigeonVar_replyList[0] == null) {
-      throw PlatformException(
-        code: 'null-error',
-        message: 'Host platform returned null value for non-null return value.',
-      );
-    } else {
-      return (pigeonVar_replyList[0] as List<Object?>?)!
-          .cast<PlatformCluster>();
-    }
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return (pigeonVar_replyValue! as List<Object?>).cast<PlatformCluster>();
   }
 
   Future<PlatformCameraPosition> getCameraPosition() async {
