@@ -795,10 +795,6 @@ abstract class MapsApi {
   /// Takes a snapshot of the map and returns its image data.
   Uint8List? takeSnapshot();
 
-  /// Gets current clusters for the cluster manager with the given ID.
-  @ObjCSelector('clustersWithIdentifier:')
-  List<PlatformCluster> getClusters(String clusterManagerId);
-
   /// Returns true if the map supports advanced markers.
   @ObjCSelector('isAdvancedMarkersAvailable')
   bool isAdvancedMarkersAvailable();
@@ -867,13 +863,6 @@ abstract class MapsCallbackApi {
   @ObjCSelector('didTapGroundOverlayWithIdentifier:')
   void onGroundOverlayTap(String groundOverlayId);
 
-  /// Called when clusters are updated for a cluster manager.
-  @ObjCSelector('didUpdateClusterManagersWithIdentifier:clusters:')
-  void onClusterManagersUpdated(
-    String clusterManagerId,
-    List<PlatformCluster> clusters,
-  );
-
   /// Called to get data for a map tile.
   @async
   @ObjCSelector('tileWithOverlayIdentifier:location:zoom:')
@@ -912,6 +901,8 @@ abstract class MapsInspectorApi {
   PlatformHeatmap? getHeatmapInfo(String heatmapId);
   @ObjCSelector('zoomRange')
   PlatformZoomRange getZoomRange();
+  @ObjCSelector('clustersWithIdentifier:')
+  List<PlatformCluster> getClusters(String clusterManagerId);
   @ObjCSelector('cameraPosition')
   PlatformCameraPosition getCameraPosition();
 }

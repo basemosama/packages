@@ -210,14 +210,6 @@
                                                }];
 }
 
-- (void)didUpdateClusterManagersWithIdentifier:(NSString *)clusterManagerId
-                                      clusters:(NSArray<FGMPlatformCluster *> *)clusters {
-  [self.callbackHandler didUpdateClusterManagersWithIdentifier:clusterManagerId
-                                                      clusters:clusters
-                                                    completion:^(FlutterError *_){
-                                                    }];
-}
-
 @end
 
 #pragma mark -
@@ -519,7 +511,6 @@
 
 - (void)mapView:(GMSMapView *)mapView idleAtCameraPosition:(GMSCameraPosition *)position {
   [self.mapEventHandler didIdleCamera];
-  [self.clusterManagersController invokeClusteringForEachClusterManager];
 }
 
 - (BOOL)mapView:(GMSMapView *)mapView didTapMarker:(GMSMarker *)marker {
@@ -900,13 +891,6 @@
   return [NSNumber numberWithBool:(advancedMarkerFlag != 0)];
 }
 
-- (nullable NSArray<FGMPlatformCluster *> *)
-    clustersWithIdentifier:(NSString *)clusterManagerId
-                     error:(FlutterError *_Nullable *_Nonnull)error {
-  return [self.controller.clusterManagersController clustersWithIdentifier:clusterManagerId
-                                                                     error:error];
-}
-
 @end
 
 #pragma mark -
@@ -969,6 +953,13 @@
     heatmapWithIdentifier:(nonnull NSString *)heatmapId
                     error:(FlutterError *_Nullable __autoreleasing *_Nonnull)error {
   return [self.controller.heatmapsController heatmapWithIdentifier:heatmapId];
+}
+
+- (nullable NSArray<FGMPlatformCluster *> *)
+    clustersWithIdentifier:(NSString *)clusterManagerId
+                     error:(FlutterError *_Nullable *_Nonnull)error {
+  return [self.controller.clusterManagersController clustersWithIdentifier:clusterManagerId
+                                                                     error:error];
 }
 
 - (nullable NSNumber *)isCompassEnabledWithError:

@@ -805,9 +805,6 @@ abstract class MapsApi {
   /// Takes a snapshot of the map and returns its image data.
   @async
   Uint8List takeSnapshot();
-
-  /// Gets current clusters for the cluster manager with the given ID.
-  List<PlatformCluster> getClusters(String clusterManagerId);
 }
 
 @FlutterApi()
@@ -856,12 +853,6 @@ abstract class MapsCallbackApi {
 
   /// Called when a ground overlay is tapped.
   void onGroundOverlayTap(String groundOverlayId);
-
-  /// Called when clusters are updated for a cluster manager.
-  void onClusterManagersUpdated(
-    String clusterManagerId,
-    List<PlatformCluster> clusters,
-  );
 
   /// Called to get data for a map tile.
   @async
@@ -917,5 +908,6 @@ abstract class MapsInspectorApi {
   PlatformTileLayer? getTileOverlayInfo(String tileOverlayId);
   PlatformGroundOverlay? getGroundOverlayInfo(String groundOverlayId);
   PlatformZoomRange getZoomRange();
+  List<PlatformCluster> getClusters(String clusterManagerId);
   PlatformCameraPosition getCameraPosition();
 }

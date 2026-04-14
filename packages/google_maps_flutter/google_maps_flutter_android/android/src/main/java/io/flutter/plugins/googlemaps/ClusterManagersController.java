@@ -173,7 +173,6 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.addItem(item);
       clusterManager.cluster();
-      dispatchClusterManagerUpdate(item.clusterManagerId());
     }
   }
 
@@ -183,7 +182,6 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.addItems(items);
       clusterManager.cluster();
-      dispatchClusterManagerUpdate(clusterManagerId);
     }
   }
 
@@ -194,7 +192,6 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.removeItem(item);
       clusterManager.cluster();
-      dispatchClusterManagerUpdate(item.clusterManagerId());
     }
   }
 
@@ -204,7 +201,6 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.removeItems(items);
       clusterManager.cluster();
-      dispatchClusterManagerUpdate(clusterManagerId);
     }
   }
 
@@ -246,25 +242,6 @@ class ClusterManagersController
     for (Map.Entry<String, ClusterManager<MarkerBuilder>> entry :
         clusterManagerIdToManager.entrySet()) {
       entry.getValue().onCameraIdle();
-      dispatchClusterManagerUpdate(entry.getKey());
-    }
-  }
-
-  private void dispatchClusterManagerUpdate(String clusterManagerId) {
-    if (googleMap == null) return;
-    try {
-      Set<? extends Cluster<MarkerBuilder>> clusters =
-          getClustersWithClusterManagerId(clusterManagerId);
-      List<Messages.PlatformCluster> platformClusters = new java.util.ArrayList<>();
-      for (Cluster<MarkerBuilder> cluster : clusters) {
-        if (cluster.getSize() > 0) {
-          platformClusters.add(Convert.clusterToPigeon(clusterManagerId, cluster));
-        }
-      }
-      flutterApi.onClusterManagersUpdated(
-          clusterManagerId, platformClusters, new NoOpVoidResult());
-    } catch (Messages.FlutterError e) {
-      // Ignored.
     }
   }
 
