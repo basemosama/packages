@@ -3,11 +3,12 @@
 // found in the LICENSE file.
 
 @import GoogleMaps;
+@import GoogleMapsUtils;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// Defines user data object for markers.
-@interface FGMMarkerUserData : NSObject
+@interface FGMMarkerUserData : NSObject <GMUClusterItem>
 
 /// The identifier of the marker.
 @property(nonatomic, copy) NSString *markerIdentifier;
@@ -15,6 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The identifier of the cluster manager.
 /// This property is set only if the marker is managed by a cluster manager.
 @property(nonatomic, copy, nullable) NSString *clusterManagerIdentifier;
+
+/// The marker associated with this user data.
+@property(nonatomic, weak, nullable) GMSMarker *marker;
 
 @end
 

@@ -7,7 +7,7 @@
 #import "FGMConversionUtils.h"
 #import "FGMMarkerUserData.h"
 
-@interface FGMClusterManagersController ()
+@interface FGMClusterManagersController () <GMUClusterManagerDelegate>
 
 /// A dictionary mapping unique cluster manager identifiers to their corresponding cluster managers.
 @property(strong, nonatomic)
@@ -48,7 +48,7 @@
                                     clusterIconGenerator:iconGenerator];
   self.clusterManagerIdentifierToManagers[identifier] =
       [[GMUClusterManager alloc] initWithMap:self.mapView algorithm:algorithm renderer:renderer];
-  ;
+  [self.clusterManagerIdentifierToManagers[identifier] setDelegate:self map:self.mapView];
 }
 
 - (void)removeClusterManagersWithIdentifiers:(NSArray<NSString *> *)identifiers {
@@ -68,7 +68,8 @@
 }
 
 - (void)invokeClusteringForEachClusterManager {
-  for (GMUClusterManager *clusterManager in [self.clusterManagerIdentifierToManagers allValues]) {
+  for (NSString *identifier in [self.clusterManagerIdentifierToManagers allKeys]) {
+    GMUClusterManager *clusterManager = self.clusterManagerIdentifierToManagers[identifier];
     [clusterManager cluster];
   }
 }
@@ -107,6 +108,28 @@
   }
   FGMPlatformCluster *platFormCluster = FGMGetPigeonCluster(cluster, clusterManagerId);
   [self.eventDelegate didTapCluster:platFormCluster];
+}
+
+#pragma mark - GMUClusterManagerDelegate
+
+- (void)clusterManager:(GMUClusterManager *)clusterManager didUpdateClusters:(NSArray<id<GMUCluster>> *)clusters {
+  NSString *clusterManagerId = nil;
+  for (NSString *key in self.clusterManagerIdentifierToManagers) {
+    if (self.clusterManagerIdentifierToManagers[key] == clusterManager) {
+      clusterManagerId = key;
+      break;
+    }
+  }
+
+  if (clusterManagerId) {
+    NSMutableArray<FGMPlatformCluster *> *pigeonClusters =
+        [[NSMutableArray alloc] initWithCapacity:clusters.count];
+    for (id<GMUCluster> cluster in clusters) {
+      [pigeonClusters addObject:FGMGetPigeonCluster(cluster, clusterManagerId)];
+    }
+    [self.eventDelegate didUpdateClusterManagersWithIdentifier:clusterManagerId
+                                                      clusters:pigeonClusters];
+  }
 }
 
 #pragma mark - Private methods

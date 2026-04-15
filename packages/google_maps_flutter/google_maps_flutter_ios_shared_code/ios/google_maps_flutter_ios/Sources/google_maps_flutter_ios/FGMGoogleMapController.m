@@ -210,6 +210,14 @@
                                                }];
 }
 
+- (void)didUpdateClusterManagersWithIdentifier:(NSString *)clusterManagerId
+                                      clusters:(NSArray<FGMPlatformCluster *> *)clusters {
+  [self.callbackHandler didUpdateClusterManagersWithIdentifier:clusterManagerId
+                                                      clusters:clusters
+                                                    completion:^(FlutterError *_){
+                                                    }];
+}
+
 @end
 
 #pragma mark -
@@ -889,6 +897,13 @@
   NSUInteger advancedMarkerFlag =
       self.controller.mapView.mapCapabilities & GMSMapCapabilityFlagsAdvancedMarkers;
   return [NSNumber numberWithBool:(advancedMarkerFlag != 0)];
+}
+
+- (nullable NSArray<FGMPlatformCluster *> *)
+    clustersWithIdentifier:(nonnull NSString *)clusterManagerId
+                     error:(FlutterError *_Nullable __autoreleasing *_Nonnull)error {
+  return [self.controller.clusterManagersController clustersWithIdentifier:clusterManagerId
+                                                                     error:error];
 }
 
 @end

@@ -19,7 +19,11 @@ dependencies:
     # the parent directory to use the current plugin's version.
     path: ../
   google_maps_flutter_android: ^2.19.1
-  google_maps_flutter_platform_interface: ^2.14.2
+  google_maps_flutter_platform_interface:
+    git:
+      url: https://github.com/basemosama/packages.git
+      path: packages/google_maps_flutter/google_maps_flutter_platform_interface
+      ref: feat_add_get_clusters_to_map
 
 dev_dependencies:
   build_runner: ^2.1.10

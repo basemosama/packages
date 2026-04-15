@@ -61,7 +61,8 @@ void _syncSharedFiles(
     );
     // The shared source README.md is not part of the shared source of truth,
     // just an explanation of this source-sharing system.
-    if (relativePath == 'README.md') {
+    if (relativePath == 'README.md' ||
+        !['.swift', '.m', '.h', '.dart', '.txt'].any(relativePath.endsWith)) {
       continue;
     }
 
