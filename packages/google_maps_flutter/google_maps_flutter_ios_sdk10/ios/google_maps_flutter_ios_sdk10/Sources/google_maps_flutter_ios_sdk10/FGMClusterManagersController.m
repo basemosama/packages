@@ -68,8 +68,27 @@
 }
 
 - (void)invokeClusteringForEachClusterManager {
-  for (GMUClusterManager *clusterManager in [self.clusterManagerIdentifierToManagers allValues]) {
-    [clusterManager cluster];
+  for (NSString *identifier in [self.clusterManagerIdentifierToManagers allKeys]) {
+    GMUClusterManager *clusterManager = self.clusterManagerIdentifierToManagers[identifier];
+    @try {
+      [clusterManager cluster];
+      [self dispatchClusterManagerUpdates:identifier];
+    } @catch (NSException *exception) {
+      // GMUNonHierarchicalDistanceBasedAlgorithm can throw assertion failures when
+      // cluster items become inconsistent during rapid marker add/change/remove cycles.
+      // This is a known issue in the Google Maps Utils library. We log and skip this
+      // clustering cycle; the next idle callback will retry successfully.
+      NSLog(@"FGMClusterManagersController: clustering failed for '%@': %@", identifier,
+            exception.reason);
+    }
+  }
+}
+
+- (void)dispatchClusterManagerUpdates:(NSString *)identifier {
+  FlutterError *error;
+  NSArray<FGMPlatformCluster *> *clusters = [self clustersWithIdentifier:identifier error:&error];
+  if (clusters) {
+    [self.eventDelegate didUpdateClusterManagersWithIdentifier:identifier clusters:clusters];
   }
 }
 
@@ -90,7 +109,18 @@
   // Ref:
   // https://github.com/googlemaps/google-maps-ios-utils/blob/0e7ed81f1bbd9d29e4529c40ae39b0791b0a0eb8/src/Clustering/GMUClusterManager.m#L94.
   NSUInteger integralZoom = (NSUInteger)floorf(_mapView.camera.zoom + 0.5f);
-  NSArray<id<GMUCluster>> *clusters = [clusterManager.algorithm clustersAtZoom:integralZoom];
+
+  NSArray<id<GMUCluster>> *clusters;
+  @try {
+    clusters = [clusterManager.algorithm clustersAtZoom:integralZoom];
+  } @catch (NSException *exception) {
+    // GMUNonHierarchicalDistanceBasedAlgorithm can throw assertion failures when
+    // cluster items become inconsistent during rapid marker updates.
+    NSLog(@"FGMClusterManagersController: getClusters failed for '%@': %@", identifier,
+          exception.reason);
+    return @[];
+  }
+
   NSMutableArray<FGMPlatformCluster *> *response =
       [[NSMutableArray alloc] initWithCapacity:clusters.count];
   for (id<GMUCluster> cluster in clusters) {

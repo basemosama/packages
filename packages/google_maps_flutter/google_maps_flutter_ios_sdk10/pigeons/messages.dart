@@ -798,6 +798,10 @@ abstract class MapsApi {
   /// Returns true if the map supports advanced markers.
   @ObjCSelector('isAdvancedMarkersAvailable')
   bool isAdvancedMarkersAvailable();
+
+  /// Returns the clusters for the given cluster manager.
+  @ObjCSelector('clustersWithIdentifier:')
+  List<PlatformCluster> getClusters(String clusterManagerId);
 }
 
 /// Interface for calls from the native SDK to Dart.
@@ -870,6 +874,13 @@ abstract class MapsCallbackApi {
     String tileOverlayId,
     PlatformPoint location,
     int zoom,
+  );
+
+  /// Called when clusters are updated for a cluster manager.
+  @ObjCSelector('didUpdateClusterManagersWithIdentifier:clusters:')
+  void onClusterManagersUpdated(
+    String clusterManagerId,
+    List<PlatformCluster> clusters,
   );
 }
 

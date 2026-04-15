@@ -62,6 +62,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// Called when a ground overlay is tapped.
 - (void)didTapGroundOverlayWithIdentifier:(NSString *)groundOverlayId;
 
+/// Called when clusters are updated for a cluster manager.
+- (void)didUpdateClusterManagersWithIdentifier:(NSString *)clusterManagerId
+                                      clusters:(NSArray<FGMPlatformCluster *> *)clusters;
+
 @end
 
 NS_ASSUME_NONNULL_END

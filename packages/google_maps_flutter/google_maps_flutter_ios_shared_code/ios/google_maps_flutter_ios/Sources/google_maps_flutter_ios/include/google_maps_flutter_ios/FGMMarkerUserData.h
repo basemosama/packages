@@ -3,8 +3,15 @@
 // found in the LICENSE file.
 
 @import GoogleMaps;
+@import GoogleMapsUtils;
 
 NS_ASSUME_NONNULL_BEGIN
+
+@interface GMSMarker (GMUClusterItem) <GMUClusterItem>
+@end
+
+@interface GMSAdvancedMarker (GMUClusterItem) <GMUClusterItem>
+@end
 
 /// Defines user data object for markers.
 @interface FGMMarkerUserData : NSObject
