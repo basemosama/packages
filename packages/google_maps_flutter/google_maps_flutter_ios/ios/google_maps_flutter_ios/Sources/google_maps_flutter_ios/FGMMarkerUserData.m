@@ -6,10 +6,6 @@
 
 @implementation FGMMarkerUserData
 
-- (CLLocationCoordinate2D)position {
-  return self.marker.position;
-}
-
 @end
 
 void FGMSetIdentifiersToMarkerUserData(NSString *markerIdentifier,
@@ -18,7 +14,6 @@ void FGMSetIdentifiersToMarkerUserData(NSString *markerIdentifier,
   FGMMarkerUserData *userData = [[FGMMarkerUserData alloc] init];
   userData.markerIdentifier = markerIdentifier;
   userData.clusterManagerIdentifier = clusterManagerIdentifier;
-  userData.marker = marker;
   marker.userData = userData;
 };
 
