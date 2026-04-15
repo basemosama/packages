@@ -48,7 +48,7 @@
                                     clusterIconGenerator:iconGenerator];
   self.clusterManagerIdentifierToManagers[identifier] =
       [[GMUClusterManager alloc] initWithMap:self.mapView algorithm:algorithm renderer:renderer];
-  [self.clusterManagerIdentifierToManagers[identifier] setDelegate:self map:self.mapView];
+  self.clusterManagerIdentifierToManagers[identifier].delegate = self;
 }
 
 - (void)removeClusterManagersWithIdentifiers:(NSArray<NSString *> *)identifiers {
