@@ -173,6 +173,7 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.addItem(item);
       clusterManager.cluster();
+      dispatchClusterManagerUpdates(item.clusterManagerId());
     }
   }
 
@@ -182,6 +183,7 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.addItems(items);
       clusterManager.cluster();
+      dispatchClusterManagerUpdates(clusterManagerId);
     }
   }
 
@@ -192,6 +194,7 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.removeItem(item);
       clusterManager.cluster();
+      dispatchClusterManagerUpdates(item.clusterManagerId());
     }
   }
 
@@ -201,6 +204,7 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.removeItems(items);
       clusterManager.cluster();
+      dispatchClusterManagerUpdates(clusterManagerId);
     }
   }
 
@@ -242,6 +246,21 @@ class ClusterManagersController
     for (Map.Entry<String, ClusterManager<MarkerBuilder>> entry :
         clusterManagerIdToManager.entrySet()) {
       entry.getValue().onCameraIdle();
+      dispatchClusterManagerUpdates(entry.getKey());
+    }
+  }
+
+  private void dispatchClusterManagerUpdates(String clusterManagerId) {
+    try {
+      Set<? extends Cluster<MarkerBuilder>> clusters =
+          getClustersWithClusterManagerId(clusterManagerId);
+      List<Messages.PlatformCluster> pigeonClusters = new ArrayList<>(clusters.size());
+      for (Cluster<MarkerBuilder> cluster : clusters) {
+        pigeonClusters.add(Convert.clusterToPigeon(clusterManagerId, cluster));
+      }
+      flutterApi.onClusterManagersUpdated(clusterManagerId, pigeonClusters, new NoOpVoidResult());
+    } catch (Exception e) {
+      // Ignore or log error
     }
   }
 

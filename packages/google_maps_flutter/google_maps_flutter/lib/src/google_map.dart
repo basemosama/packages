@@ -143,6 +143,7 @@ class GoogleMap extends StatefulWidget {
     this.onCameraIdle,
     this.onTap,
     this.onLongPress,
+    this.onClusterManagerUpdated,
     this.markerType = GoogleMapMarkerType.marker,
     this.colorScheme,
     String? mapId,
@@ -307,6 +308,10 @@ class GoogleMap extends StatefulWidget {
 
   /// Called every time a [GoogleMap] is long pressed.
   final ArgumentCallback<LatLng>? onLongPress;
+
+  /// Called when clusters are updated for a [ClusterManager].
+  final void Function(ClusterManagerId clusterManagerId, List<Cluster> clusters)?
+      onClusterManagerUpdated;
 
   /// True if a "My Location" layer should be shown on the map.
   ///
@@ -761,6 +766,11 @@ class _GoogleMapState extends State<GoogleMap> {
         clusterManager.onClustersUpdated;
     if (onClustersUpdated != null) {
       onClustersUpdated(clusters);
+    }
+    final void Function(ClusterManagerId, List<Cluster>)?
+        onClusterManagerUpdated = widget.onClusterManagerUpdated;
+    if (onClusterManagerUpdated != null) {
+      onClusterManagerUpdated(clusterManagerId, clusters);
     }
   }
 }

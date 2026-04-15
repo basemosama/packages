@@ -68,8 +68,18 @@
 }
 
 - (void)invokeClusteringForEachClusterManager {
-  for (GMUClusterManager *clusterManager in [self.clusterManagerIdentifierToManagers allValues]) {
+  for (NSString *identifier in [self.clusterManagerIdentifierToManagers allKeys]) {
+    GMUClusterManager *clusterManager = self.clusterManagerIdentifierToManagers[identifier];
     [clusterManager cluster];
+    [self dispatchClusterManagerUpdates:identifier];
+  }
+}
+
+- (void)dispatchClusterManagerUpdates:(NSString *)identifier {
+  FlutterError *error;
+  NSArray<FGMPlatformCluster *> *clusters = [self clustersWithIdentifier:identifier error:&error];
+  if (clusters) {
+    [self.eventDelegate didUpdateClusterManagersWithIdentifier:identifier clusters:clusters];
   }
 }
 

@@ -229,6 +229,13 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
   }
 
   @override
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({
+    required int mapId,
+  }) {
+    return _events(mapId).whereType<ClusterManagerUpdateEvent>();
+  }
+
+  @override
   Future<void> updateMapConfiguration(
     MapConfiguration configuration, {
     required int mapId,
@@ -485,6 +492,18 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
   @override
   Future<Uint8List?> takeSnapshot({required int mapId}) {
     return _hostApi(mapId).takeSnapshot();
+  }
+
+  @override
+  Future<List<Cluster>> getClusters({
+    required ClusterManagerId clusterManagerId,
+    required int mapId,
+  }) async {
+    final List<PlatformCluster> clusters =
+        await _hostApi(mapId).getClusters(clusterManagerId.value);
+    return clusters
+        .map((PlatformCluster cluster) => clusterFromPlatformCluster(cluster))
+        .toList();
   }
 
   @override
@@ -1315,6 +1334,25 @@ class HostMapMessageHandler implements MapsCallbackApi {
   void onGroundOverlayTap(String groundOverlayId) {
     streamController.add(
       GroundOverlayTapEvent(mapId, GroundOverlayId(groundOverlayId)),
+    );
+  }
+
+  @override
+  void onClusterManagersUpdated(
+    String clusterManagerId,
+    List<PlatformCluster> clusters,
+  ) {
+    streamController.add(
+      ClusterManagerUpdateEvent(
+        mapId,
+        clusters
+            .map(
+              (PlatformCluster cluster) =>
+                  GoogleMapsFlutterAndroid.clusterFromPlatformCluster(cluster),
+            )
+            .toList(),
+        clusterManagerId: ClusterManagerId(clusterManagerId),
+      ),
     );
   }
 

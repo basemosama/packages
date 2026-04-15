@@ -143,6 +143,12 @@ class GoogleMapController {
     );
   }
 
+  /// Returns a [Stream] of [ClusterManagerUpdateEvent]s.
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdated() {
+    return GoogleMapsFlutterPlatform.instance
+        .onClusterManagerUpdate(mapId: mapId);
+  }
+
   /// Updates configuration options of the map user interface.
   ///
   /// Change listeners are notified once the update has been made on the
