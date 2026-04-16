@@ -21,6 +21,7 @@ import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.collections.MarkerManager;
 import io.flutter.plugins.googlemaps.Messages.MapsCallbackApi;
 import io.flutter.plugins.googlemaps.Messages.PlatformMarkerType;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
