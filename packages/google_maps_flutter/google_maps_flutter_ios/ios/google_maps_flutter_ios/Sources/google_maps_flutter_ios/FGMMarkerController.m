@@ -189,27 +189,26 @@
 
   NSString *clusterManagerIdentifier = markerToChange.clusterManagerId;
   NSString *previousClusterManagerIdentifier = [controller clusterManagerIdentifier];
+  BOOL conformsToClusterItem = [controller.marker conformsToProtocol:@protocol(GMUClusterItem)];
+
+  if (conformsToClusterItem && previousClusterManagerIdentifier != nil) {
+    // Remove marker from previous cluster manager BEFORE updating it,
+    // so that its QuadTree removes it using the OLD position.
+    GMUClusterManager *clusterManager = [_clusterManagersController
+        clusterManagerWithIdentifier:previousClusterManagerIdentifier];
+    [clusterManager removeItem:(id<GMUClusterItem>)controller.marker];
+  }
+
   [controller updateFromPlatformMarker:markerToChange
                          assetProvider:self.assetProvider
                            screenScale:[self getScreenScale]];
 
-  if ([controller.marker conformsToProtocol:@protocol(GMUClusterItem)]) {
-    if (previousClusterManagerIdentifier &&
-        ![clusterManagerIdentifier isEqualToString:previousClusterManagerIdentifier]) {
-      // Remove marker from previous cluster manager if its cluster manager identifier is removed or
-      // changed.
-      GMUClusterManager *clusterManager = [_clusterManagersController
-          clusterManagerWithIdentifier:previousClusterManagerIdentifier];
-      [clusterManager removeItem:(id<GMUClusterItem>)controller.marker];
-    }
-
-    if (clusterManagerIdentifier &&
-        ![previousClusterManagerIdentifier isEqualToString:clusterManagerIdentifier]) {
-      // Add marker to cluster manager if its cluster manager identifier has changed.
-      GMUClusterManager *clusterManager =
-          [_clusterManagersController clusterManagerWithIdentifier:clusterManagerIdentifier];
-      [clusterManager addItem:(id<GMUClusterItem>)controller.marker];
-    }
+  if (conformsToClusterItem && clusterManagerIdentifier != nil) {
+    // Add marker to cluster manager AFTER updating it,
+    // so that its QuadTree inserts it using the NEW position.
+    GMUClusterManager *clusterManager =
+        [_clusterManagersController clusterManagerWithIdentifier:clusterManagerIdentifier];
+    [clusterManager addItem:(id<GMUClusterItem>)controller.marker];
   }
 }
 
