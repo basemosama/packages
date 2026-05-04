@@ -124,12 +124,14 @@ gmaps.MapOptions _configurationAndStyleToGmapsOptions(
   options.fullscreenControl = false;
   options.streetViewControl = false;
 
+  final bool hasCloudMapId = configuration.mapId?.isNotEmpty ?? false;
   // If using cloud map, do not set options.styles
-  if (configuration.mapId == null) {
+  if (!hasCloudMapId) {
     options.styles = styles;
   }
-
-  options.mapId = configuration.mapId;
+  if (hasCloudMapId) {
+    options.mapId = configuration.mapId;
+  }
 
   final gmaps.ColorScheme? jsColorScheme = _gmapTypeColorSchemeForPluginColor(
     configuration.colorScheme,

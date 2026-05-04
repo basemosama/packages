@@ -434,14 +434,19 @@ class GoogleMapController {
     MapConfiguration update,
   ) {
     if (update.style != null) {
-      // Provide async access to the error rather than throwing, to match the
-      // behavior of other platforms where there's no mechanism to return errors
-      // from configuration updates.
-      try {
-        _lastStyles = _mapStyles(update.style);
+      if (update.style!.isEmpty) {
+        _lastStyles = const <gmaps.MapTypeStyle>[];
         _lastStyleError = null;
-      } on MapStyleException catch (e) {
-        _lastStyleError = e.cause;
+      } else {
+        // Provide async access to the error rather than throwing, to match the
+        // behavior of other platforms where there's no mechanism to return errors
+        // from configuration updates.
+        try {
+          _lastStyles = _mapStyles(update.style);
+          _lastStyleError = null;
+        } on MapStyleException catch (e) {
+          _lastStyleError = e.cause;
+        }
       }
     }
     return _lastStyles;
