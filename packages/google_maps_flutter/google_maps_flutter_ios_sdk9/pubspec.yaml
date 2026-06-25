@@ -30,14 +30,14 @@ dev_dependencies:
   mockito: ^5.4.4
   path: ^1.8.0
   pigeon: ^26.1.0
-  plugin_platform_interface: ^2.1.7
+  google_maps_flutter_platform_interface:
+    git:
+      url: https://github.com/basemosama/packages.git
+      path: packages/google_maps_flutter/google_maps_flutter_platform_interface
+      ref: feat_add_get_clusters_to_map3
   process: ^5.0.5
 
 topics:
   - google-maps
   - google-maps-flutter
   - map
-# FOR TESTING AND INITIAL REVIEW ONLY. DO NOT MERGE.
-# See https://github.com/flutter/flutter/blob/master/docs/ecosystem/contributing/README.md#changing-federated-plugins
-dependency_overrides:
-  google_maps_flutter_platform_interface: {path: ../../../packages/google_maps_flutter/google_maps_flutter_platform_interface}
