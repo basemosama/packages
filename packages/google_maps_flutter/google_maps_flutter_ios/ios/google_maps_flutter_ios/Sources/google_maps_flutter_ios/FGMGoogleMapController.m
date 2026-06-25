@@ -525,8 +525,8 @@
   if ([marker.userData isKindOfClass:[GMUStaticCluster class]]) {
     GMUStaticCluster *cluster = marker.userData;
     [self.clusterManagersController didTapCluster:cluster];
-    // When NO is returned, the map will focus on the cluster.
-    return NO;
+    // Return YES to consume the event and prevent the native default cluster focus behavior.
+    return YES;
   }
   return
       [self.markersController didTapMarkerWithIdentifier:FGMGetMarkerIdentifierFromMarker(marker)];

@@ -262,8 +262,8 @@ class ClusterManagersController
           (Result<Unit> result) -> Unit.INSTANCE);
     }
 
-    // Return false to allow the default behavior of the cluster click event to occur.
-    return false;
+    // Return true to consume the event and prevent the native default cluster focus behavior.
+    return true;
   }
 
   /**
