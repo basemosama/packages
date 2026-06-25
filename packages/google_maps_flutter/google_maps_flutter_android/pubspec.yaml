@@ -2,11 +2,11 @@ name: google_maps_flutter_android
 description: Android implementation of the google_maps_flutter plugin.
 repository: https://github.com/flutter/packages/tree/main/packages/google_maps_flutter/google_maps_flutter_android
 issue_tracker: https://github.com/flutter/flutter/issues?q=is%3Aissue+is%3Aopen+label%3A%22p%3A+maps%22
-version: 2.19.6
+version: 2.19.12
 
 environment:
-  sdk: ^3.9.0
-  flutter: ">=3.35.0"
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
 
 flutter:
   plugin:
@@ -21,11 +21,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_plugin_android_lifecycle: ^2.0.1
-  google_maps_flutter_platform_interface:
-    git:
-      url: https://github.com/basemosama/packages.git
-      path: packages/google_maps_flutter/google_maps_flutter_platform_interface
-      ref: feat_add_get_clusters_to_map
+  google_maps_flutter_platform_interface: ^2.15.0
+  meta: ^1.10.0
   stream_transform: ^2.0.0
 
 dev_dependencies:
@@ -34,10 +31,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   mockito: ^5.4.4
-  pigeon: ^26.1.0
+  pigeon: ^26.3.4
   plugin_platform_interface: ^2.1.7
 
 topics:
   - google-maps
   - google-maps-flutter
   - map
+# FOR TESTING AND INITIAL REVIEW ONLY. DO NOT MERGE.
+# See https://github.com/flutter/flutter/blob/master/docs/ecosystem/contributing/README.md#changing-federated-plugins
+dependency_overrides:
+  google_maps_flutter_platform_interface: {path: ../../../packages/google_maps_flutter/google_maps_flutter_platform_interface}

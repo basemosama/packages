@@ -19,11 +19,7 @@ class ClusterManagerId extends MapsObjectId<ClusterManager> {
 @immutable
 class ClusterManager implements MapsObject<ClusterManager> {
   /// Creates an immutable object for managing clustering for set of markers.
-  const ClusterManager({
-    required this.clusterManagerId,
-    this.onClusterTap,
-    this.onClustersUpdated,
-  });
+  const ClusterManager({required this.clusterManagerId, this.onClusterTap, this.onClustersUpdated});
 
   /// Uniquely identifies a [ClusterManager].
   final ClusterManagerId clusterManagerId;
@@ -76,8 +72,7 @@ class ClusterManager implements MapsObject<ClusterManager> {
     if (other.runtimeType != runtimeType) {
       return false;
     }
-    return other is ClusterManager &&
-        clusterManagerId == other.clusterManagerId;
+    return other is ClusterManager && clusterManagerId == other.clusterManagerId;
   }
 
   @override

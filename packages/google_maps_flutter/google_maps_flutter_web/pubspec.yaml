@@ -2,11 +2,11 @@ name: google_maps_flutter_web
 description: Web platform implementation of google_maps_flutter
 repository: https://github.com/flutter/packages/tree/main/packages/google_maps_flutter/google_maps_flutter_web
 issue_tracker: https://github.com/flutter/flutter/issues?q=is%3Aissue+is%3Aopen+label%3A%22p%3A+maps%22
-version: 0.6.2
+version: 0.6.2+3
 
 environment:
-  sdk: ^3.9.0
-  flutter: ">=3.35.0"
+  sdk: ^3.10.0
+  flutter: ">=3.38.0"
 
 flutter:
   plugin:
@@ -23,11 +23,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   google_maps: ^8.1.0
-  google_maps_flutter_platform_interface:
-    git:
-      url: https://github.com/basemosama/packages.git
-      path: packages/google_maps_flutter/google_maps_flutter_platform_interface
-      ref: feat_add_get_clusters_to_map
+  google_maps_flutter_platform_interface: ^2.15.0
   sanitize_html: ^2.0.0
   stream_transform: ^2.0.0
   web: ^1.0.0
@@ -43,4 +39,8 @@ topics:
 
 # The example deliberately includes limited-use secrets.
 false_secrets:
-  - /example/web/index.html
+  - /example/**/web/index.html
+# FOR TESTING AND INITIAL REVIEW ONLY. DO NOT MERGE.
+# See https://github.com/flutter/flutter/blob/master/docs/ecosystem/contributing/README.md#changing-federated-plugins
+dependency_overrides:
+  google_maps_flutter_platform_interface: {path: ../../../packages/google_maps_flutter/google_maps_flutter_platform_interface}

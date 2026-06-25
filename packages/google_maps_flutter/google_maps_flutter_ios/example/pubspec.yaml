@@ -18,11 +18,7 @@ dependencies:
     # The example app is bundled with the plugin so we use a path dependency on
     # the parent directory to use the current plugin's version.
     path: ../
-  google_maps_flutter_platform_interface:
-    git:
-      url: https://github.com/basemosama/packages.git
-      path: packages/google_maps_flutter/google_maps_flutter_platform_interface
-      ref: feat_add_get_clusters_to_map
+  google_maps_flutter_platform_interface: ^2.15.0
 
 dev_dependencies:
   flutter_test:
@@ -35,3 +31,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+# FOR TESTING AND INITIAL REVIEW ONLY. DO NOT MERGE.
+# See https://github.com/flutter/flutter/blob/master/docs/ecosystem/contributing/README.md#changing-federated-plugins
+dependency_overrides:
+  google_maps_flutter_platform_interface: {path: ../../../../packages/google_maps_flutter/google_maps_flutter_platform_interface}

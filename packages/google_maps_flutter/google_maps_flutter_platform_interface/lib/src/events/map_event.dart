@@ -191,11 +191,7 @@ class ClusterManagerUpdateEvent extends MapEvent<List<Cluster>> {
   ///
   /// The `value` of this event is a `List<Cluster>` object that represents the updated
   /// clusters managed by [ClusterManager].
-  ClusterManagerUpdateEvent(
-    super.mapId,
-    super.value, {
-    required this.clusterManagerId,
-  });
+  ClusterManagerUpdateEvent(super.mapId, super.value, {required this.clusterManagerId});
 
   /// The ID of the [ClusterManager] for which clusters were updated.
   final ClusterManagerId clusterManagerId;
