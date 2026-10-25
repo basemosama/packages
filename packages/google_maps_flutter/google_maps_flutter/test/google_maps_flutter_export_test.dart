@@ -29,6 +29,7 @@ void main() {
       main_file.Cluster;
       main_file.ClusterManager;
       main_file.ClusterManagerId;
+      main_file.ClusterManagerUpdateEvent;
       main_file.GroundOverlay;
       main_file.GroundOverlayId;
       main_file.Heatmap;

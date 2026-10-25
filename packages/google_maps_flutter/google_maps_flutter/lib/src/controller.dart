@@ -121,6 +121,19 @@ class GoogleMapController {
           .onClusterTap(mapId: mapId)
           .listen((ClusterTapEvent e) => _googleMapState.onClusterTap(e.value)),
     );
+    _streamSubscriptions.add(
+      GoogleMapsFlutterPlatform.instance
+          .onClusterManagerUpdate(mapId: mapId)
+          .listen(
+            (ClusterManagerUpdateEvent e) =>
+                _googleMapState.onClusterManagerUpdate(e.clusterManagerId, e.clusters),
+          ),
+    );
+  }
+
+  /// Returns a [Stream] of cluster updates for all cluster managers of the map.
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdated() {
+    return GoogleMapsFlutterPlatform.instance.onClusterManagerUpdate(mapId: mapId);
   }
 
   /// Updates configuration options of the map user interface.
@@ -353,6 +366,16 @@ class GoogleMapController {
   Future<double> getZoomLevel() {
     _checkWidgetMountedOrThrow();
     return GoogleMapsFlutterPlatform.instance.getZoomLevel(mapId: mapId);
+  }
+
+  /// Returns the current clusters of the cluster manager with the given
+  /// [clusterManagerId].
+  Future<List<Cluster>> getClusters(ClusterManagerId clusterManagerId) {
+    _checkWidgetMountedOrThrow();
+    return GoogleMapsFlutterPlatform.instance.getClusters(
+      mapId: mapId,
+      clusterManagerId: clusterManagerId,
+    );
   }
 
   /// Returns the image bytes of the map

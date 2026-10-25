@@ -1,3 +1,8 @@
+## NEXT
+
+* Adds `GoogleMapController.getClusters` and `GoogleMapController.onClusterManagerUpdated`.
+* Adds `GoogleMap.onClusterManagerUpdated` and `ClusterManager.onClustersUpdated` callbacks.
+
 ## 2.19.0
 
 * Adds support for tapping points of interest on the map.

@@ -167,6 +167,17 @@ class FakeGoogleMapsFlutterPlatform extends GoogleMapsFlutterPlatform {
     return 0.0;
   }
 
+  /// Clusters returned by [getClusters], keyed by cluster manager ID.
+  final Map<ClusterManagerId, List<Cluster>> clusters = <ClusterManagerId, List<Cluster>>{};
+
+  @override
+  Future<List<Cluster>> getClusters({
+    required int mapId,
+    required ClusterManagerId clusterManagerId,
+  }) async {
+    return clusters[clusterManagerId] ?? <Cluster>[];
+  }
+
   @override
   Future<Uint8List?> takeSnapshot({required int mapId}) async {
     return null;
@@ -245,6 +256,11 @@ class FakeGoogleMapsFlutterPlatform extends GoogleMapsFlutterPlatform {
   @override
   Stream<ClusterTapEvent> onClusterTap({required int mapId}) {
     return mapEventStreamController.stream.whereType<ClusterTapEvent>();
+  }
+
+  @override
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({required int mapId}) {
+    return mapEventStreamController.stream.whereType<ClusterManagerUpdateEvent>();
   }
 
   @override

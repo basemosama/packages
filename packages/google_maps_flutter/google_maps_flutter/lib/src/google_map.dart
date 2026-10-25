@@ -137,6 +137,7 @@ class GoogleMap extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.onPointOfInterestTap,
+    this.onClusterManagerUpdated,
     this.markerType = GoogleMapMarkerType.marker,
     this.colorScheme,
     String? mapId,
@@ -305,6 +306,13 @@ class GoogleMap extends StatefulWidget {
   ///
   /// May not be supported on all implementations.
   final ArgumentCallback<PointOfInterestId>? onPointOfInterestTap;
+
+  /// Called with the current clusters whenever the clusters of one of the
+  /// [clusterManagers] change.
+  ///
+  /// See also [ClusterManager.onClustersUpdated] for a per-manager callback.
+  final void Function(ClusterManagerId clusterManagerId, List<Cluster> clusters)?
+  onClusterManagerUpdated;
 
   /// True if a "My Location" layer should be shown on the map.
   ///
@@ -739,6 +747,17 @@ class _GoogleMapState extends State<GoogleMap> {
     if (onClusterTap != null) {
       onClusterTap(cluster);
     }
+  }
+
+  void onClusterManagerUpdate(ClusterManagerId clusterManagerId, List<Cluster> clusters) {
+    final ClusterManager? clusterManager = _clusterManagers[clusterManagerId];
+    // Updates are delivered asynchronously, so they can arrive after the cluster
+    // manager has already been removed from the widget.
+    if (clusterManager == null) {
+      return;
+    }
+    clusterManager.onClustersUpdated?.call(clusters);
+    widget.onClusterManagerUpdated?.call(clusterManagerId, clusters);
   }
 }
 
