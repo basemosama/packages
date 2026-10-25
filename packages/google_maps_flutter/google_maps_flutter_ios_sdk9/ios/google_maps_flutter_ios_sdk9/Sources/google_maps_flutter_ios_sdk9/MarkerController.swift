@@ -181,17 +181,22 @@ class MarkersController {
 
     let clusterManagerIdentifier = markerToChange.clusterManagerId
     let previousClusterManagerIdentifier = controller.clusterManagerIdentifier
+
+    // The clustering algorithm indexes items by the position they were added with, so the marker
+    // is removed before its position can change and added back afterwards. Otherwise the
+    // algorithm keeps a stale entry and fails with "All items should be mapped to a distance".
+    if let previousId = previousClusterManagerIdentifier {
+      let clusterManager = clusterManagersController?.clusterManager(withIdentifier: previousId)
+      clusterManager?.remove(controller.marker)
+    }
+
     controller.update(
       from: markerToChange,
       assetProvider: assetProvider,
       screenScale: getScreenScale()
     )
 
-    if let previousId = previousClusterManagerIdentifier, previousId != clusterManagerIdentifier {
-      let clusterManager = clusterManagersController?.clusterManager(withIdentifier: previousId)
-      clusterManager?.remove(controller.marker)
-    }
-    if let newId = clusterManagerIdentifier, newId != previousClusterManagerIdentifier {
+    if let newId = clusterManagerIdentifier {
       let clusterManager = clusterManagersController?.clusterManager(withIdentifier: newId)
       clusterManager?.add(controller.marker)
     }

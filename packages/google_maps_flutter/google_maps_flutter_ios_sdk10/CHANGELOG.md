@@ -1,3 +1,9 @@
+## NEXT
+
+* Implements `getClusters` and `onClusterManagerUpdate`.
+* Fixes a crash ("All items should be mapped to a distance") when a clustered marker
+  is moved.
+
 ## 2.19.0
 
 * Adds support for tapping points of interest on the map.

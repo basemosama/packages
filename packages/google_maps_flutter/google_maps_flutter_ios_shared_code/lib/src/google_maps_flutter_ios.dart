@@ -208,6 +208,11 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   }
 
   @override
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({required int mapId}) {
+    return _events(mapId).whereType<ClusterManagerUpdateEvent>();
+  }
+
+  @override
   Future<void> updateMapConfiguration(MapConfiguration configuration, {required int mapId}) {
     return _hostApi(
       mapId,
@@ -396,6 +401,16 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   @override
   Future<double> getZoomLevel({required int mapId}) {
     return _hostApi(mapId).getZoomLevel();
+  }
+
+  @override
+  Future<List<Cluster>> getClusters({
+    required int mapId,
+    required ClusterManagerId clusterManagerId,
+  }) async {
+    return (await _hostApi(
+      mapId,
+    ).getClusters(clusterManagerId.value)).map(clusterFromPlatformCluster).toList();
   }
 
   @override
@@ -971,6 +986,17 @@ class HostMapMessageHandler implements MapsCallbackApi {
   void onClusterTap(PlatformCluster cluster) {
     streamController.add(
       ClusterTapEvent(mapId, GoogleMapsFlutterIOS.clusterFromPlatformCluster(cluster)),
+    );
+  }
+
+  @override
+  void onClusterManagerUpdate(String clusterManagerId, List<PlatformCluster> clusters) {
+    streamController.add(
+      ClusterManagerUpdateEvent(
+        mapId,
+        clusters.map(GoogleMapsFlutterIOS.clusterFromPlatformCluster).toList(),
+        clusterManagerId: ClusterManagerId(clusterManagerId),
+      ),
     );
   }
 

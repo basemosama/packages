@@ -43,6 +43,24 @@ class TestMapEventHandler: MapEventDelegate, TileProviderDelegate {
 
   func didTapCluster(_ clusterArg: PlatformCluster) async throws {}
 
+  private let clusterUpdatesContinuation: AsyncStream<String>.Continuation
+  /// The cluster manager identifiers of received cluster updates.
+  let clusterUpdates: AsyncStream<String>
+  /// The number of received cluster updates.
+  private(set) var clusterUpdateCount = 0
+
+  init() {
+    (clusterUpdates, clusterUpdatesContinuation) = AsyncStream.makeStream(of: String.self)
+  }
+
+  func didUpdateClusters(
+    withIdentifier clusterManagerIdArg: String,
+    clusters clustersArg: [PlatformCluster]
+  ) async throws {
+    clusterUpdateCount += 1
+    clusterUpdatesContinuation.yield(clusterManagerIdArg)
+  }
+
   func didTapPolygon(withIdentifier polygonIdArg: String) async throws {}
 
   func didTapPolyline(withIdentifier polylineIdArg: String) async throws {}

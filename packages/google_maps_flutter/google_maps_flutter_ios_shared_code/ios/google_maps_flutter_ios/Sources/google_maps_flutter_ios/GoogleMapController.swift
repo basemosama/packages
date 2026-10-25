@@ -358,6 +358,7 @@ public class GoogleMapController: NSObject, GMSMapViewDelegate, FlutterPlatformV
     Task {
       try await dartCallbackHandler.didIdleCamera()
     }
+    clusterManagersController.didIdleCamera()
   }
 
   public func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool {
@@ -747,6 +748,11 @@ class MapCallHandler: MapsApi {
 
   func isAdvancedMarkersAvailable() -> Bool {
     return controller?.mapView.mapCapabilities.contains(.advancedMarkers) ?? false
+  }
+
+  func clusters(withIdentifier clusterManagerId: String) throws -> [PlatformCluster] {
+    return try controller?.clusterManagersController.clusters(withIdentifier: clusterManagerId)
+      ?? []
   }
 }
 
