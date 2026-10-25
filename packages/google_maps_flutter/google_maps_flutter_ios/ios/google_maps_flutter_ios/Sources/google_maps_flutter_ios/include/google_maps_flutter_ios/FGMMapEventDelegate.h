@@ -53,6 +53,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// Called when a marker cluster is tapped.
 - (void)didTapCluster:(FGMPlatformCluster *)cluster;
 
+/// Called when the clusters of a cluster manager change.
+- (void)didUpdateClustersWithIdentifier:(NSString *)clusterManagerId
+                               clusters:(NSArray<FGMPlatformCluster *> *)clusters;
+
 /// Called when a polygon is tapped.
 - (void)didTapPolygonWithIdentifier:(NSString *)polygonId;
 

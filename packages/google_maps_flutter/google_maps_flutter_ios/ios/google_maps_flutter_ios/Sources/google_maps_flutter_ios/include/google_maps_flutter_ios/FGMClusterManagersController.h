@@ -50,8 +50,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param cluster The cluster that was tapped on.
 - (void)didTapCluster:(GMUStaticCluster *)cluster;
 
-/// Calls the cluster method of all the cluster managers.
+/// Calls the cluster method of all the cluster managers, and sends their clusters to the event
+/// delegate.
 - (void)invokeClusteringForEachClusterManager;
+
+/// Called when the map camera stops moving.
+///
+/// Sends the clusters of each cluster manager to the event delegate if the integral zoom level,
+/// which determines the clustering, changed since they were last sent.
+- (void)didIdleCamera;
 @end
 
 NS_ASSUME_NONNULL_END

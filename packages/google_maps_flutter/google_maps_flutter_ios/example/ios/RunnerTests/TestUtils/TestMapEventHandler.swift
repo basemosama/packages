@@ -34,6 +34,13 @@ class TestMapEventHandler: NSObject, FGMMapEventDelegate {
 
   func didTap(_ cluster: FGMPlatformCluster) {}
 
+  /// The cluster manager identifiers of all received cluster updates, in order.
+  var clusterUpdateIdentifiers: [String] = []
+
+  func didUpdateClusters(withIdentifier clusterManagerId: String, clusters: [FGMPlatformCluster]) {
+    clusterUpdateIdentifiers.append(clusterManagerId)
+  }
+
   func didTapPolygon(withIdentifier polygonId: String) {}
 
   func didTapPolyline(withIdentifier polylineId: String) {}

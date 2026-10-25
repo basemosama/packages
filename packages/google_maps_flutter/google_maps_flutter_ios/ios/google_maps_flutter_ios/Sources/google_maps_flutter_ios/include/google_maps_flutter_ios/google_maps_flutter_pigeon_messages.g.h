@@ -862,6 +862,12 @@ NSObject<FlutterMessageCodec> *FGMGetGoogleMapsFlutterPigeonMessagesCodec(void);
 ///
 /// @return `nil` only when `error != nil`.
 - (nullable NSNumber *)isAdvancedMarkersAvailable:(FlutterError *_Nullable *_Nonnull)error;
+/// Returns the current clusters of the given cluster manager.
+///
+/// @return `nil` only when `error != nil`.
+- (nullable NSArray<FGMPlatformCluster *> *)
+    clustersWithIdentifier:(NSString *)clusterManagerId
+                     error:(FlutterError *_Nullable *_Nonnull)error;
 @end
 
 extern void SetUpFGMMapsApi(id<FlutterBinaryMessenger> binaryMessenger,
@@ -913,6 +919,10 @@ extern void SetUpFGMMapsApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger
 /// Called when a marker cluster is tapped.
 - (void)didTapCluster:(FGMPlatformCluster *)cluster
            completion:(void (^)(FlutterError *_Nullable))completion;
+/// Called when the clusters of a cluster manager change.
+- (void)didUpdateClustersWithIdentifier:(NSString *)clusterManagerId
+                               clusters:(NSArray<FGMPlatformCluster *> *)clusters
+                             completion:(void (^)(FlutterError *_Nullable))completion;
 /// Called when a polygon is tapped.
 - (void)didTapPolygonWithIdentifier:(NSString *)polygonId
                          completion:(void (^)(FlutterError *_Nullable))completion;

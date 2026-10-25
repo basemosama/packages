@@ -192,6 +192,14 @@
                            }];
 }
 
+- (void)didUpdateClustersWithIdentifier:(NSString *)clusterManagerId
+                               clusters:(NSArray<FGMPlatformCluster *> *)clusters {
+  [self.callbackHandler didUpdateClustersWithIdentifier:clusterManagerId
+                                               clusters:clusters
+                                             completion:^(FlutterError *_){
+                                             }];
+}
+
 - (void)didTapPolygonWithIdentifier:(NSString *)polygonId {
   [self.callbackHandler didTapPolygonWithIdentifier:polygonId
                                          completion:^(FlutterError *_){
@@ -511,6 +519,7 @@
 
 - (void)mapView:(GMSMapView *)mapView idleAtCameraPosition:(GMSCameraPosition *)position {
   [self.mapEventHandler didIdleCamera];
+  [self.clusterManagersController didIdleCamera];
 }
 
 - (BOOL)mapView:(GMSMapView *)mapView didTapMarker:(GMSMarker *)marker {
@@ -889,6 +898,13 @@
   NSUInteger advancedMarkerFlag =
       self.controller.mapView.mapCapabilities & GMSMapCapabilityFlagsAdvancedMarkers;
   return [NSNumber numberWithBool:(advancedMarkerFlag != 0)];
+}
+
+- (nullable NSArray<FGMPlatformCluster *> *)
+    clustersWithIdentifier:(NSString *)clusterManagerId
+                     error:(FlutterError *_Nullable __autoreleasing *_Nonnull)error {
+  return [self.controller.clusterManagersController clustersWithIdentifier:clusterManagerId
+                                                                     error:error];
 }
 
 @end

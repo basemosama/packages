@@ -19,6 +19,11 @@
 /// The current map instance on which the cluster managers are operating.
 @property(strong, nonatomic) GMSMapView *mapView;
 
+/// The integral zoom level at which clusters were last sent to the event delegate, per cluster
+/// manager identifier.
+@property(strong, nonatomic)
+    NSMutableDictionary<NSString *, NSNumber *> *clusterManagerIdentifierToLastUpdateZoom;
+
 @end
 
 @implementation FGMClusterManagersController
@@ -29,6 +34,7 @@
     _eventDelegate = eventDelegate;
     _mapView = mapView;
     _clusterManagerIdentifierToManagers = [[NSMutableDictionary alloc] init];
+    _clusterManagerIdentifierToLastUpdateZoom = [[NSMutableDictionary alloc] init];
   }
   return self;
 }
@@ -60,6 +66,7 @@
     }
     [clusterManager clearItems];
     [self.clusterManagerIdentifierToManagers removeObjectForKey:identifier];
+    [self.clusterManagerIdentifierToLastUpdateZoom removeObjectForKey:identifier];
   }
 }
 
@@ -68,8 +75,26 @@
 }
 
 - (void)invokeClusteringForEachClusterManager {
-  for (GMUClusterManager *clusterManager in [self.clusterManagerIdentifierToManagers allValues]) {
-    [clusterManager cluster];
+  for (NSString *identifier in [self.clusterManagerIdentifierToManagers allKeys]) {
+    @try {
+      [self.clusterManagerIdentifierToManagers[identifier] cluster];
+    } @catch (NSException *exception) {
+      // GMUNonHierarchicalDistanceBasedAlgorithm asserts when its items become inconsistent. Skip
+      // this clustering pass rather than crashing; the next one will retry.
+      NSLog(@"Clustering failed for cluster manager '%@': %@", identifier, exception.reason);
+      continue;
+    }
+    [self sendClustersWithIdentifier:identifier];
+  }
+}
+
+- (void)didIdleCamera {
+  NSUInteger integralZoom = [self integralZoom];
+  for (NSString *identifier in [self.clusterManagerIdentifierToLastUpdateZoom allKeys]) {
+    if (self.clusterManagerIdentifierToLastUpdateZoom[identifier].unsignedIntegerValue !=
+        integralZoom) {
+      [self sendClustersWithIdentifier:identifier];
+    }
   }
 }
 
@@ -87,10 +112,14 @@
     return nil;
   }
 
-  // Ref:
-  // https://github.com/googlemaps/google-maps-ios-utils/blob/0e7ed81f1bbd9d29e4529c40ae39b0791b0a0eb8/src/Clustering/GMUClusterManager.m#L94.
-  NSUInteger integralZoom = (NSUInteger)floorf(_mapView.camera.zoom + 0.5f);
-  NSArray<id<GMUCluster>> *clusters = [clusterManager.algorithm clustersAtZoom:integralZoom];
+  NSArray<id<GMUCluster>> *clusters;
+  @try {
+    clusters = [clusterManager.algorithm clustersAtZoom:[self integralZoom]];
+  } @catch (NSException *exception) {
+    // See invokeClusteringForEachClusterManager.
+    NSLog(@"Getting clusters failed for cluster manager '%@': %@", identifier, exception.reason);
+    clusters = @[];
+  }
   NSMutableArray<FGMPlatformCluster *> *response =
       [[NSMutableArray alloc] initWithCapacity:clusters.count];
   for (id<GMUCluster> cluster in clusters) {
@@ -110,6 +139,25 @@
 }
 
 #pragma mark - Private methods
+
+/// Returns the integral zoom level used for clustering.
+- (NSUInteger)integralZoom {
+  // Ref:
+  // https://github.com/googlemaps/google-maps-ios-utils/blob/0e7ed81f1bbd9d29e4529c40ae39b0791b0a0eb8/src/Clustering/GMUClusterManager.m#L94.
+  return (NSUInteger)floorf(self.mapView.camera.zoom + 0.5f);
+}
+
+/// Sends the current clusters of the cluster manager with the given identifier to the event
+/// delegate.
+- (void)sendClustersWithIdentifier:(NSString *)identifier {
+  FlutterError *error;
+  NSArray<FGMPlatformCluster *> *clusters = [self clustersWithIdentifier:identifier error:&error];
+  if (!clusters) {
+    return;
+  }
+  self.clusterManagerIdentifierToLastUpdateZoom[identifier] = @([self integralZoom]);
+  [self.eventDelegate didUpdateClustersWithIdentifier:identifier clusters:clusters];
+}
 
 /// Returns the cluster manager identifier for given cluster.
 ///

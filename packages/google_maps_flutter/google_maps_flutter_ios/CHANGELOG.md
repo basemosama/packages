@@ -1,3 +1,9 @@
+## NEXT
+
+* Implements `getClusters` and `onClusterManagerUpdate`.
+* Fixes a crash ("All items should be mapped to a distance") when a clustered marker
+  is moved.
+
 ## 2.18.7
 
 * Updates README to note that `GoogleMap.onPointOfInterestTap` is not supported.

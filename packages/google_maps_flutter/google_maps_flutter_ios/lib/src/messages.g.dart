@@ -3516,6 +3516,28 @@ class MapsApi {
     );
     return pigeonVar_replyValue! as bool;
   }
+
+  /// Returns the current clusters of the given cluster manager.
+  Future<List<PlatformCluster>> getClusters(String clusterManagerId) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.google_maps_flutter_ios.MapsApi.getClusters$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[
+      clusterManagerId,
+    ]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return (pigeonVar_replyValue! as List<Object?>).cast<PlatformCluster>();
+  }
 }
 
 /// Interface for calls from the native SDK to Dart.
@@ -3557,6 +3579,9 @@ abstract class MapsCallbackApi {
 
   /// Called when a marker cluster is tapped.
   void onClusterTap(PlatformCluster cluster);
+
+  /// Called when the clusters of a cluster manager change.
+  void onClusterManagerUpdate(String clusterManagerId, List<PlatformCluster> clusters);
 
   /// Called when a polygon is tapped.
   void onPolygonTap(String polygonId);
@@ -3864,6 +3889,33 @@ abstract class MapsCallbackApi {
           final PlatformCluster arg_cluster = args[0]! as PlatformCluster;
           try {
             api.onClusterTap(arg_cluster);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.google_maps_flutter_ios.MapsCallbackApi.onClusterManagerUpdate$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final String arg_clusterManagerId = args[0]! as String;
+          final List<PlatformCluster> arg_clusters = (args[1]! as List<Object?>)
+              .cast<PlatformCluster>();
+          try {
+            api.onClusterManagerUpdate(arg_clusterManagerId, arg_clusters);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

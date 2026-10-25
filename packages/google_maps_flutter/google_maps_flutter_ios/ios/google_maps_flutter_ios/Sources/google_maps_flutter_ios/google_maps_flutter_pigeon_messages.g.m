@@ -4053,6 +4053,32 @@ void SetUpFGMMapsApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger,
       [channel setMessageHandler:nil];
     }
   }
+  /// Returns the current clusters of the given cluster manager.
+  {
+    FlutterBasicMessageChannel *channel = [[FlutterBasicMessageChannel alloc]
+           initWithName:[NSString
+                            stringWithFormat:
+                                @"%@%@",
+                                @"dev.flutter.pigeon.google_maps_flutter_ios.MapsApi.getClusters",
+                                messageChannelSuffix]
+        binaryMessenger:binaryMessenger
+                  codec:FGMGetGoogleMapsFlutterPigeonMessagesCodec()];
+    if (api) {
+      NSCAssert([api respondsToSelector:@selector(clustersWithIdentifier:error:)],
+                @"FGMMapsApi api (%@) doesn't respond to @selector(clustersWithIdentifier:error:)",
+                api);
+      [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+        NSArray<id> *args = message;
+        NSString *arg_clusterManagerId = GetNullableObjectAtIndex(args, 0);
+        FlutterError *error;
+        NSArray<FGMPlatformCluster *> *output = [api clustersWithIdentifier:arg_clusterManagerId
+                                                                      error:&error];
+        callback(wrapResult(output, error));
+      }];
+    } else {
+      [channel setMessageHandler:nil];
+    }
+  }
 }
 @interface FGMMapsCallbackApi ()
 @property(nonatomic, strong) NSObject<FlutterBinaryMessenger> *binaryMessenger;
@@ -4362,6 +4388,33 @@ void SetUpFGMMapsApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger,
              binaryMessenger:self.binaryMessenger
                        codec:FGMGetGoogleMapsFlutterPigeonMessagesCodec()];
   [channel sendMessage:@[ arg_cluster ?: [NSNull null] ]
+                 reply:^(NSArray<id> *reply) {
+                   if (reply != nil) {
+                     if (reply.count > 1) {
+                       completion([FlutterError errorWithCode:reply[0]
+                                                      message:reply[1]
+                                                      details:reply[2]]);
+                     } else {
+                       completion(nil);
+                     }
+                   } else {
+                     completion(createConnectionError(channelName));
+                   }
+                 }];
+}
+- (void)didUpdateClustersWithIdentifier:(NSString *)arg_clusterManagerId
+                               clusters:(NSArray<FGMPlatformCluster *> *)arg_clusters
+                             completion:(void (^)(FlutterError *_Nullable))completion {
+  NSString *channelName = [NSString
+      stringWithFormat:
+          @"%@%@",
+          @"dev.flutter.pigeon.google_maps_flutter_ios.MapsCallbackApi.onClusterManagerUpdate",
+          _messageChannelSuffix];
+  FlutterBasicMessageChannel *channel = [FlutterBasicMessageChannel
+      messageChannelWithName:channelName
+             binaryMessenger:self.binaryMessenger
+                       codec:FGMGetGoogleMapsFlutterPigeonMessagesCodec()];
+  [channel sendMessage:@[ arg_clusterManagerId ?: [NSNull null], arg_clusters ?: [NSNull null] ]
                  reply:^(NSArray<id> *reply) {
                    if (reply != nil) {
                      if (reply.count > 1) {

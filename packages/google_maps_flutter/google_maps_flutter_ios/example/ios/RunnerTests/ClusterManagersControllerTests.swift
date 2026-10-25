@@ -138,4 +138,104 @@ import Testing
     clusterManager = clusterManagersController.clusterManager(withIdentifier: clusterManagerId)
     #expect(clusterManager == nil)
   }
+
+  private func makeControllers() -> (
+    FGMClusterManagersController, FGMMarkersController, TestMapEventHandler, GMSMapView
+  ) {
+    let mapViewOptions = GMSMapViewOptions()
+    mapViewOptions.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+    mapViewOptions.camera = GMSCameraPosition(latitude: 0, longitude: 0, zoom: 0)
+    let mapView = PartiallyMockedMapView(options: mapViewOptions)
+    let eventHandler = TestMapEventHandler()
+    let clusterManagersController = FGMClusterManagersController(
+      mapView: mapView,
+      eventDelegate: eventHandler
+    )
+    let markersController = FGMMarkersController(
+      mapView: mapView,
+      eventDelegate: eventHandler,
+      clusterManagersController: clusterManagersController,
+      assetProvider: TestAssetProvider(),
+      markerType: .marker
+    )
+    return (clusterManagersController, markersController, eventHandler, mapView)
+  }
+
+  private func makeMarker(
+    _ markerId: String, clusterManagerId: String, latitude: Double, longitude: Double
+  ) -> FGMPlatformMarker {
+    let zeroPoint = FGMPlatformPoint.makeWith(x: 0, y: 0)
+    return FGMPlatformMarker.make(
+      withAlpha: 1,
+      anchor: zeroPoint,
+      consumeTapEvents: false,
+      draggable: false,
+      flat: false,
+      icon: FGMPlatformBitmap.make(withBitmap: FGMPlatformBitmapDefaultMarker.make(withHue: 0)),
+      infoWindow: FGMPlatformInfoWindow.make(withTitle: nil, snippet: nil, anchor: zeroPoint),
+      position: FGMPlatformLatLng.make(withLatitude: latitude, longitude: longitude),
+      rotation: 0,
+      visible: true,
+      zIndex: 1,
+      markerId: markerId,
+      clusterManagerId: clusterManagerId,
+      collisionBehavior: nil
+    )
+  }
+
+  @Test func movingClusteredMarkerUpdatesClusters() throws {
+    let (clusterManagersController, markersController, _, mapView) = makeControllers()
+    // At low zoom levels every item is within clustering distance of every other, which would
+    // hide a stale position.
+    mapView.camera = GMSCameraPosition(latitude: 0, longitude: 0, zoom: 10)
+    let clusterManagerId = "cm"
+    clusterManagersController.add([
+      FGMPlatformClusterManager.make(withIdentifier: clusterManagerId)
+    ])
+    markersController.add([
+      makeMarker("m1", clusterManagerId: clusterManagerId, latitude: 0, longitude: 0)
+    ])
+    clusterManagersController.invokeClusteringForEachClusterManager()
+
+    // Moving a clustered marker previously left a stale entry in the clustering algorithm, which
+    // made the next clustering pass fail.
+    markersController.change([
+      makeMarker("m1", clusterManagerId: clusterManagerId, latitude: 10, longitude: 20)
+    ])
+    clusterManagersController.invokeClusteringForEachClusterManager()
+
+    var error: FlutterError? = nil
+    let clusters = try #require(
+      clusterManagersController.clusters(withIdentifier: clusterManagerId, error: &error)
+    )
+    #expect(error == nil)
+    let cluster = try #require(clusters.first)
+    #expect(clusters.count == 1)
+    #expect(cluster.markerIds == ["m1"])
+    #expect(cluster.position.latitude == 10)
+    #expect(cluster.position.longitude == 20)
+  }
+
+  @Test func sendsClusterUpdates() throws {
+    let (clusterManagersController, markersController, eventHandler, mapView) = makeControllers()
+    let clusterManagerId = "cm"
+    clusterManagersController.add([
+      FGMPlatformClusterManager.make(withIdentifier: clusterManagerId)
+    ])
+    markersController.add([
+      makeMarker("m1", clusterManagerId: clusterManagerId, latitude: 0, longitude: 0)
+    ])
+
+    clusterManagersController.invokeClusteringForEachClusterManager()
+    #expect(eventHandler.clusterUpdateIdentifiers == [clusterManagerId])
+
+    // No update while the integral zoom level is unchanged.
+    mapView.camera = GMSCameraPosition(latitude: 0, longitude: 0, zoom: 0.4)
+    clusterManagersController.didIdleCamera()
+    #expect(eventHandler.clusterUpdateIdentifiers == [clusterManagerId])
+
+    mapView.camera = GMSCameraPosition(latitude: 0, longitude: 0, zoom: 5)
+    clusterManagersController.didIdleCamera()
+    #expect(eventHandler.clusterUpdateIdentifiers == [clusterManagerId, clusterManagerId])
+  }
 }
