@@ -425,7 +425,11 @@ class GoogleMapController {
   // source of truth for style info. Currently it's tracked and handled
   // separately since style didn't used to be part of the configuration.
   List<gmaps.MapTypeStyle> _updateStylesFromConfiguration(MapConfiguration update) {
-    if (update.style != null) {
+    if (update.style?.isEmpty ?? false) {
+      // The app-facing package uses an empty style to clear the style.
+      _lastStyles = const <gmaps.MapTypeStyle>[];
+      _lastStyleError = null;
+    } else if (update.style != null) {
       // Provide async access to the error rather than throwing, to match the
       // behavior of other platforms where there's no mechanism to return errors
       // from configuration updates.

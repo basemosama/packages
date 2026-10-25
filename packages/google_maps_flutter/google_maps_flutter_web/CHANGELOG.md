@@ -1,6 +1,7 @@
 ## NEXT
 
 * Implements `getClusters` and `onClusterManagerUpdate`.
+* Fixes clearing the map style, which previously kept the last style.
 
 ## 0.6.5
 

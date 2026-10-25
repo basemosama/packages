@@ -843,6 +843,23 @@ void main() {
           expect(controller.styles, isEmpty);
           expect(controller.lastStyleError, isNotNull);
         });
+
+        testWidgets('empty style clears the style', (WidgetTester tester) async {
+          const style = '''
+[{
+  "featureType": "poi.park",
+  "elementType": "labels.text.fill",
+  "stylers": [{"color": "#6b9a76"}]
+}]''';
+          controller.updateMapConfiguration(const MapConfiguration(style: style));
+          controller.updateMapConfiguration(const MapConfiguration(style: '[[[invalid style'));
+          expect(controller.lastStyleError, isNotNull);
+
+          controller.updateMapConfiguration(const MapConfiguration(style: ''));
+
+          expect(controller.styles, isEmpty);
+          expect(controller.lastStyleError, isNull);
+        });
       });
 
       group('viewport getters', () {
