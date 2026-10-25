@@ -272,6 +272,15 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
     throw UnimplementedError('getZoomLevel() has not been implemented.');
   }
 
+  /// Returns the current clusters of the [ClusterManager] with the given
+  /// [clusterManagerId].
+  Future<List<Cluster>> getClusters({
+    required int mapId,
+    required ClusterManagerId clusterManagerId,
+  }) {
+    throw UnimplementedError('getClusters() has not been implemented.');
+  }
+
   /// Returns the image bytes of the map.
   ///
   /// Returns null if a snapshot cannot be created.
@@ -355,6 +364,12 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
   /// A marker icon managed by [ClusterManager] has been tapped.
   Stream<ClusterTapEvent> onClusterTap({required int mapId}) {
     throw UnimplementedError('onClusterTap() has not been implemented.');
+  }
+
+  /// The clusters of a [ClusterManager] have been updated, for example after
+  /// markers were added, changed or removed, or the zoom level changed.
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({required int mapId}) {
+    throw UnimplementedError('onClusterManagerUpdate() has not been implemented.');
   }
 
   /// A [GroundOverlay] has been tapped.

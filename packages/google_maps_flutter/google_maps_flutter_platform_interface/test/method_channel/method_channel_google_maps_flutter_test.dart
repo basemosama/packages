@@ -119,5 +119,68 @@ void main() {
       expect((await markerDragStream.next).value.value, equals('drag-marker'));
       expect((await markerDragEndStream.next).value.value, equals('drag-end-marker'));
     });
+
+    final jsonCluster = <dynamic, dynamic>{
+      'position': <double>[1.0, 2.0],
+      'bounds': <dynamic, dynamic>{
+        'northeast': <double>[3.0, 4.0],
+        'southwest': <double>[-3.0, -4.0],
+      },
+      'markerIds': <String>['marker-1', 'marker-2'],
+    };
+
+    void expectCluster(Cluster cluster) {
+      expect(cluster.clusterManagerId, const ClusterManagerId('cm-1'));
+      expect(cluster.markerIds, const <MarkerId>[MarkerId('marker-1'), MarkerId('marker-2')]);
+      expect(cluster.position, const LatLng(1.0, 2.0));
+      expect(
+        cluster.bounds,
+        LatLngBounds(northeast: const LatLng(3.0, 4.0), southwest: const LatLng(-3.0, -4.0)),
+      );
+    }
+
+    test('getClusters parses clusters', () async {
+      const mapId = 2;
+      final maps = MethodChannelGoogleMapsFlutter();
+      Object? arguments;
+      configureMockMap(
+        maps,
+        mapId: mapId,
+        handler: (MethodCall methodCall) async {
+          arguments = methodCall.arguments;
+          return <dynamic>[jsonCluster];
+        },
+      );
+
+      final List<Cluster> clusters = await maps.getClusters(
+        mapId: mapId,
+        clusterManagerId: const ClusterManagerId('cm-1'),
+      );
+
+      expect(log, <String>['clusterManagers#getClusters']);
+      expect(arguments, <String, Object>{'clusterManagerId': 'cm-1'});
+      expect(clusters, hasLength(1));
+      expectCluster(clusters.single);
+    });
+
+    test('cluster manager updates are sent to the correct stream', () async {
+      const mapId = 3;
+      final maps = MethodChannelGoogleMapsFlutter();
+      maps.ensureChannelInitialized(mapId);
+      final updates = StreamQueue<ClusterManagerUpdateEvent>(
+        maps.onClusterManagerUpdate(mapId: mapId),
+      );
+
+      await sendPlatformMessage(mapId, 'cluster#onClusterManagerUpdate', <dynamic, dynamic>{
+        'clusterManagerId': 'cm-1',
+        'clusters': <dynamic>[jsonCluster],
+      });
+
+      final ClusterManagerUpdateEvent event = await updates.next;
+      expect(event.mapId, mapId);
+      expect(event.clusterManagerId, const ClusterManagerId('cm-1'));
+      expect(event.clusters, hasLength(1));
+      expectCluster(event.clusters.single);
+    });
   });
 }

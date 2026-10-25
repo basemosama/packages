@@ -52,5 +52,21 @@ void main() {
       );
       expect(log, contains('onTapParam'));
     });
+
+    test('copyWith onClustersUpdatedParam', () {
+      final log = <String>[];
+      final manager = ClusterManager(
+        clusterManagerId: const ClusterManagerId('1234'),
+        onClusterTap: (Cluster cluster) => log.add('onTap'),
+      );
+
+      final ClusterManager copy = manager.copyWith(
+        onClustersUpdatedParam: (List<Cluster> clusters) => log.add('onClustersUpdated'),
+      );
+      copy.onClustersUpdated!(const <Cluster>[]);
+
+      expect(log, <String>['onClustersUpdated']);
+      expect(copy.onClusterTap, manager.onClusterTap);
+    });
   });
 }

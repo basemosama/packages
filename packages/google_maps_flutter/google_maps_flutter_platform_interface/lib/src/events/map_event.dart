@@ -193,3 +193,18 @@ class ClusterTapEvent extends MapEvent<Cluster> {
   /// cluster icon managed by [ClusterManager].
   ClusterTapEvent(super.mapId, super.cluster);
 }
+
+/// An event fired when the clusters of a [ClusterManager] are updated.
+class ClusterManagerUpdateEvent extends MapEvent<List<Cluster>> {
+  /// Build a ClusterManagerUpdateEvent triggered from the map represented by `mapId`.
+  ///
+  /// The `value` of this event is the current list of [Cluster]s managed by the
+  /// [ClusterManager] identified by [clusterManagerId].
+  ClusterManagerUpdateEvent(super.mapId, super.clusters, {required this.clusterManagerId});
+
+  /// The ID of the [ClusterManager] whose clusters were updated.
+  final ClusterManagerId clusterManagerId;
+
+  /// The current clusters of the [ClusterManager].
+  List<Cluster> get clusters => value;
+}

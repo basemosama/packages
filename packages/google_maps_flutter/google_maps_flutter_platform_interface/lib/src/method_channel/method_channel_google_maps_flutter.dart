@@ -170,6 +170,11 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     return _events(mapId).whereType<ClusterTapEvent>();
   }
 
+  @override
+  Stream<ClusterManagerUpdateEvent> onClusterManagerUpdate({required int mapId}) {
+    return _events(mapId).whereType<ClusterManagerUpdateEvent>();
+  }
+
   Future<dynamic> _handleMethodCall(MethodCall call, int mapId) async {
     switch (call.method) {
       case 'camera#onMoveStarted':
@@ -282,9 +287,35 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
             Cluster(clusterManagerId, markerIds, position: position, bounds: bounds),
           ),
         );
+      case 'cluster#onClusterManagerUpdate':
+        final Map<String, Object?> arguments = _getArgumentDictionary(call);
+        final clusterManagerId = ClusterManagerId(arguments['clusterManagerId']! as String);
+        final List<Cluster> clusters = (arguments['clusters']! as List<Object?>)
+            .map((Object? cluster) => _clusterFromJson(clusterManagerId, cluster!))
+            .toList();
+        _mapEventStreamController.add(
+          ClusterManagerUpdateEvent(mapId, clusters, clusterManagerId: clusterManagerId),
+        );
       default:
         throw MissingPluginException();
     }
+  }
+
+  /// Converts a serialized cluster, as sent by the native side, to a [Cluster].
+  Cluster _clusterFromJson(ClusterManagerId clusterManagerId, Object json) {
+    final data = json as Map<Object?, Object?>;
+    final bounds = data['bounds']! as Map<Object?, Object?>;
+    return Cluster(
+      clusterManagerId,
+      (data['markerIds']! as List<Object?>)
+          .map((Object? markerId) => MarkerId(markerId! as String))
+          .toList(),
+      position: LatLng.fromJson(data['position'])!,
+      bounds: LatLngBounds(
+        northeast: LatLng.fromJson(bounds['northeast'])!,
+        southwest: LatLng.fromJson(bounds['southwest'])!,
+      ),
+    );
   }
 
   /// Returns the arguments of [call] as typed string-keyed Map.
@@ -435,6 +466,18 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   @override
   Future<double> getZoomLevel({required int mapId}) async {
     return (await channel(mapId).invokeMethod<double>('map#getZoomLevel'))!;
+  }
+
+  @override
+  Future<List<Cluster>> getClusters({
+    required int mapId,
+    required ClusterManagerId clusterManagerId,
+  }) async {
+    final List<Object?> clusters = (await channel(mapId).invokeMethod<List<Object?>>(
+      'clusterManagers#getClusters',
+      <String, Object>{'clusterManagerId': clusterManagerId.value},
+    ))!;
+    return clusters.map((Object? cluster) => _clusterFromJson(clusterManagerId, cluster!)).toList();
   }
 
   @override

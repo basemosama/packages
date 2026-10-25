@@ -1,3 +1,8 @@
+## NEXT
+
+* Adds `getClusters` and `onClusterManagerUpdate` to `GoogleMapsFlutterPlatform`,
+  `ClusterManagerUpdateEvent`, and `ClusterManager.onClustersUpdated`.
+
 ## 2.18.0
 
 * Adds support for configuring the color displayed behind unloaded map tiles.
