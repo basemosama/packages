@@ -390,6 +390,46 @@ void main() {
       expect(scaledSize.height, 30);
     });
 
+    testWidgets('markers without rotation keep the original icon', (WidgetTester tester) async {
+      final Uint8List bytes = const Base64Decoder().convert(iconImageBase64);
+      await controller.addMarkers(<Marker>{
+        Marker(markerId: const MarkerId('1'), icon: BytesMapBitmap(bytes, width: 20, height: 40)),
+      });
+
+      final icon = controller.markers[const MarkerId('1')]?.marker?.icon as gmaps.Icon?;
+      expect(icon, isNotNull);
+      expect(icon!.url, startsWith('blob:'));
+      expect(icon.size!.width, 20);
+      expect(icon.size!.height, 40);
+      expect(icon.anchor!.x, 10);
+      expect(icon.anchor!.y, 40);
+    });
+
+    testWidgets('markers with rotation are rotated around their anchor', (
+      WidgetTester tester,
+    ) async {
+      final Uint8List bytes = const Base64Decoder().convert(iconImageBase64);
+      await controller.addMarkers(<Marker>{
+        Marker(
+          markerId: const MarkerId('1'),
+          icon: BytesMapBitmap(bytes, width: 20, height: 40),
+          rotation: 90,
+        ),
+      });
+
+      final icon = controller.markers[const MarkerId('1')]?.marker?.icon as gmaps.Icon?;
+      expect(icon, isNotNull);
+      expect(icon!.url, startsWith('data:image/png'));
+      // A 20x40 icon anchored at its bottom center, rotated 90 degrees
+      // clockwise, is a 40x20 icon anchored at its left center.
+      expect(icon.size!.width, closeTo(40, 1e-9));
+      expect(icon.size!.height, closeTo(20, 1e-9));
+      expect(icon.scaledSize!.width, closeTo(40, 1e-9));
+      expect(icon.scaledSize!.height, closeTo(20, 1e-9));
+      expect(icon.anchor!.x, closeTo(0, 1e-9));
+      expect(icon.anchor!.y, closeTo(10, 1e-9));
+    });
+
     // https://github.com/flutter/flutter/issues/67854
     testWidgets('InfoWindow snippet can have links', (WidgetTester tester) async {
       final markers = <Marker>{

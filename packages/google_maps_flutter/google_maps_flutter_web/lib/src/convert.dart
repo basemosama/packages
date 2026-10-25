@@ -23,6 +23,13 @@ final Map<String, Future<Size?>> _bitmapSizeFutureCache = <String, Future<Size?>
 // updates are processed.
 final Map<int, String> _bitmapBlobUrlCache = <int, String>{};
 
+// Rotated legacy marker icons, keyed by the icon and rotation they were made
+// from. Unlike the caches above, this one is kept across marker updates, since
+// markers are often updated without their icon or rotation changing. It is
+// bounded by [_maxRotatedIconCacheSize], evicting the oldest entries first.
+final Map<String, Future<gmaps.Icon?>> _rotatedIconCache = <String, Future<gmaps.Icon?>>{};
+const int _maxRotatedIconCacheSize = 100;
+
 // Converts a [Color] into a valid CSS value #RRGGBB.
 String _getCssColor(Color color) {
   return '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
@@ -341,13 +348,22 @@ gmaps.Size? _gmSizeFromIconConfig(List<Object?> iconConfig, int sizeIndex) {
 }
 
 /// Sets the size and style of the [icon] element.
+///
+/// The icon is rotated clockwise by [rotation] degrees around [anchor].
 void _setIconStyle({
   required web.HTMLImageElement icon,
   required gmaps.Size? size,
   required double? opacity,
   required bool? isVisible,
+  double rotation = 0,
+  Offset anchor = const Offset(0.5, 1),
 }) {
   final web.CSSStyleDeclaration iconStyle = icon.style;
+  if (rotation % 360 != 0) {
+    iconStyle
+      ..transform = 'rotate(${rotation}deg)'
+      ..transformOrigin = '${anchor.dx * 100}% ${anchor.dy * 100}%';
+  }
   if (size != null) {
     iconStyle
       ..width = '${size.width.toStringAsFixed(1)}px'
@@ -497,7 +513,9 @@ Future<web.Node?> _advancedMarkerIconFromPinConfig(
         opacity: 1.0,
         // Always visible, as the visibility is handled by the parent marker.
         isVisible: true,
-        rotation: rotation,
+        // Never rotated, as the rotation is applied to the whole pin.
+        rotation: 0,
+        anchor: const Offset(0.5, 0.5),
       );
       options.glyph = glyphBitmap;
     case null:
@@ -518,6 +536,7 @@ Future<web.Node?> _advancedMarkerIconFromMapBitmap(
   required double opacity,
   required bool isVisible,
   required double rotation,
+  required Offset anchor,
 }) async {
   final String url = switch (bitmap) {
     (final BytesMapBitmap bytesMapBitmap) => _bitmapBlobUrlCache.putIfAbsent(
@@ -539,7 +558,14 @@ Future<web.Node?> _advancedMarkerIconFromMapBitmap(
     MapBitmapScaling.auto => await _getBitmapSize(bitmap, url),
     MapBitmapScaling.none => null,
   };
-  _setIconStyle(icon: icon, size: size, opacity: opacity, isVisible: isVisible);
+  _setIconStyle(
+    icon: icon,
+    size: size,
+    opacity: opacity,
+    isVisible: isVisible,
+    rotation: rotation,
+    anchor: anchor,
+  );
 
   return icon;
 }
@@ -549,6 +575,7 @@ Future<web.Node?> _advancedMarkerIconFromAssetImage(
   required double opacity,
   required bool isVisible,
   required double rotation,
+  required Offset anchor,
 }) async {
   assert(iconConfig.length >= 2);
   // iconConfig[2] contains the DPIs of the screen, but that information is
@@ -557,7 +584,14 @@ Future<web.Node?> _advancedMarkerIconFromAssetImage(
     ..src = ui_web.assetManager.getAssetUrl(iconConfig[1]! as String);
 
   final gmaps.Size? size = _gmSizeFromIconConfig(iconConfig, 3);
-  _setIconStyle(icon: icon, size: size, opacity: opacity, isVisible: isVisible);
+  _setIconStyle(
+    icon: icon,
+    size: size,
+    opacity: opacity,
+    isVisible: isVisible,
+    rotation: rotation,
+    anchor: anchor,
+  );
   return icon;
 }
 
@@ -566,6 +600,7 @@ Future<web.Node?> _advancedMarkerIconFromBytes(
   required double opacity,
   required bool isVisible,
   required double rotation,
+  required Offset anchor,
 }) async {
   // Grab the bytes, and put them into a blob.
   final bytes = iconConfig[1]! as List<int>;
@@ -581,7 +616,14 @@ Future<web.Node?> _advancedMarkerIconFromBytes(
   final icon = web.HTMLImageElement()..src = web.URL.createObjectURL(blob as JSObject);
 
   final gmaps.Size? size = _gmSizeFromIconConfig(iconConfig, 2);
-  _setIconStyle(size: size, icon: icon, opacity: opacity, isVisible: isVisible);
+  _setIconStyle(
+    size: size,
+    icon: icon,
+    opacity: opacity,
+    isVisible: isVisible,
+    rotation: rotation,
+    anchor: anchor,
+  );
   return icon;
 }
 
@@ -592,6 +634,7 @@ Future<web.Node?> _advancedMarkerIconFromBitmapDescriptor(
   required double opacity,
   required bool isVisible,
   required double rotation,
+  required Offset anchor,
 }) async {
   if (bitmapDescriptor is PinConfig) {
     return _advancedMarkerIconFromPinConfig(
@@ -606,6 +649,7 @@ Future<web.Node?> _advancedMarkerIconFromBitmapDescriptor(
     return _advancedMarkerIconFromMapBitmap(
       bitmapDescriptor,
       rotation: rotation,
+      anchor: anchor,
       opacity: opacity,
       isVisible: isVisible,
     );
@@ -620,6 +664,7 @@ Future<web.Node?> _advancedMarkerIconFromBitmapDescriptor(
       opacity: opacity,
       isVisible: isVisible,
       rotation: rotation,
+      anchor: anchor,
     );
   } else if (iconConfig[0] == 'fromBytes') {
     return _advancedMarkerIconFromBytes(
@@ -627,14 +672,117 @@ Future<web.Node?> _advancedMarkerIconFromBitmapDescriptor(
       opacity: opacity,
       isVisible: isVisible,
       rotation: rotation,
+      anchor: anchor,
     );
   }
 
   return null;
 }
 
-// Converts a [BitmapDescriptor] into a [gmaps.Icon] that can be used in Markers.
+// Converts a [BitmapDescriptor] into a [gmaps.Icon] that can be used in
+// Markers, rotated clockwise by [rotation] degrees around its anchor.
+//
+// Legacy markers don't support rotating image icons, so a rotated copy of the
+// image is drawn instead.
 Future<gmaps.Icon?> _gmIconFromBitmapDescriptor(
+  BitmapDescriptor bitmapDescriptor,
+  Offset anchor,
+  double rotation,
+) async {
+  final gmaps.Icon? icon = await _gmUnrotatedIconFromBitmapDescriptor(bitmapDescriptor, anchor);
+  if (icon == null || rotation % 360 == 0) {
+    return icon;
+  }
+  return await _rotatedGmIcon(icon, rotation) ?? icon;
+}
+
+// Returns a copy of [icon] rotated clockwise by [rotation] degrees around its
+// anchor, or null if the icon image can't be drawn.
+Future<gmaps.Icon?> _rotatedGmIcon(gmaps.Icon icon, double rotation) {
+  final gmaps.Size? size = icon.scaledSize;
+  final gmaps.Point? anchor = icon.anchor;
+  final double pixelRatio = web.window.devicePixelRatio;
+  final cacheKey =
+      '${icon.url}|$rotation|${size?.width}x${size?.height}|${anchor?.x},${anchor?.y}|$pixelRatio';
+  final Future<gmaps.Icon?>? cached = _rotatedIconCache.remove(cacheKey);
+  final Future<gmaps.Icon?> rotated =
+      cached ?? _drawRotatedGmIcon(icon.url, size, anchor, rotation, pixelRatio);
+  _rotatedIconCache[cacheKey] = rotated;
+  if (_rotatedIconCache.length > _maxRotatedIconCacheSize) {
+    _rotatedIconCache.remove(_rotatedIconCache.keys.first);
+  }
+  return rotated;
+}
+
+Future<gmaps.Icon?> _drawRotatedGmIcon(
+  String url,
+  gmaps.Size? size,
+  gmaps.Point? anchor,
+  double rotation,
+  double pixelRatio,
+) async {
+  final image = web.HTMLImageElement()..src = url;
+  await Future.any(<Future<web.Event>>[image.onLoad.first, image.onError.first]);
+  if (image.naturalWidth == 0 || image.naturalHeight == 0) {
+    return null;
+  }
+
+  // Icons without an explicit size are drawn at their natural size, and icons
+  // without an explicit anchor are anchored at their bottom center.
+  final double width = size?.width.toDouble() ?? image.naturalWidth.toDouble();
+  final double height = size?.height.toDouble() ?? image.naturalHeight.toDouble();
+  final double anchorX = anchor?.x.toDouble() ?? width / 2;
+  final double anchorY = anchor?.y.toDouble() ?? height;
+
+  // Bounding box of the icon rotated around its anchor, relative to the anchor.
+  final double radians = rotation * math.pi / 180;
+  final double cos = math.cos(radians);
+  final double sin = math.sin(radians);
+  double minX = double.infinity, minY = double.infinity;
+  double maxX = double.negativeInfinity, maxY = double.negativeInfinity;
+  for (final (double x, double y) in <(double, double)>[
+    (-anchorX, -anchorY),
+    (width - anchorX, -anchorY),
+    (width - anchorX, height - anchorY),
+    (-anchorX, height - anchorY),
+  ]) {
+    final double rotatedX = x * cos - y * sin;
+    final double rotatedY = x * sin + y * cos;
+    minX = math.min(minX, rotatedX);
+    maxX = math.max(maxX, rotatedX);
+    minY = math.min(minY, rotatedY);
+    maxY = math.max(maxY, rotatedY);
+  }
+  final double rotatedWidth = maxX - minX;
+  final double rotatedHeight = maxY - minY;
+
+  final canvas = web.HTMLCanvasElement()
+    ..width = (rotatedWidth * pixelRatio).ceil()
+    ..height = (rotatedHeight * pixelRatio).ceil();
+  canvas.context2D
+    ..scale(pixelRatio, pixelRatio)
+    ..translate(-minX, -minY)
+    ..rotate(radians)
+    ..drawImage(image, -anchorX, -anchorY, width, height);
+
+  final String rotatedUrl;
+  try {
+    rotatedUrl = canvas.toDataUrl('image/png');
+  } catch (_) {
+    // Images from other origins without CORS headers can't be read back.
+    return null;
+  }
+
+  final rotatedSize = gmaps.Size(rotatedWidth, rotatedHeight);
+  return gmaps.Icon()
+    ..url = rotatedUrl
+    ..size = rotatedSize
+    ..scaledSize = rotatedSize
+    ..anchor = gmaps.Point(-minX, -minY);
+}
+
+// Converts a [BitmapDescriptor] into an unrotated [gmaps.Icon].
+Future<gmaps.Icon?> _gmUnrotatedIconFromBitmapDescriptor(
   BitmapDescriptor bitmapDescriptor,
   Offset anchor,
 ) async {
@@ -717,6 +865,7 @@ class _AdvancedMarkerContentConfiguration {
     required this.alpha,
     required this.visible,
     required this.rotation,
+    required this.anchor,
     required this.icon,
     required this.iconConfiguration,
   });
@@ -726,6 +875,7 @@ class _AdvancedMarkerContentConfiguration {
       alpha: marker.alpha,
       visible: marker.visible,
       rotation: marker.rotation,
+      anchor: marker.anchor,
       icon: marker.icon,
       iconConfiguration: marker.icon.toJson(),
     );
@@ -734,6 +884,8 @@ class _AdvancedMarkerContentConfiguration {
   final double alpha;
   final bool visible;
   final double rotation;
+  // The anchor is the rotation origin of the content.
+  final Offset anchor;
   final BitmapDescriptor icon;
   final Object iconConfiguration;
 
@@ -741,6 +893,7 @@ class _AdvancedMarkerContentConfiguration {
     return alpha == marker.alpha &&
         visible == marker.visible &&
         rotation == marker.rotation &&
+        anchor == marker.anchor &&
         (identical(icon, marker.icon) ||
             const DeepCollectionEquality().equals(iconConfiguration, marker.icon.toJson()));
   }
@@ -776,6 +929,7 @@ Future<O> _markerOptionsFromMarker<T, O>(
         opacity: marker.alpha,
         isVisible: marker.visible,
         rotation: marker.rotation,
+        anchor: marker.anchor,
       );
     }
     _setAdvancedMarkerOptionsAnchor(options, marker.anchor);
@@ -783,7 +937,7 @@ Future<O> _markerOptionsFromMarker<T, O>(
   } else {
     final options = gmaps.MarkerOptions()
       ..position = gmaps.LatLng(marker.position.latitude, marker.position.longitude)
-      ..icon = await _gmIconFromBitmapDescriptor(marker.icon, marker.anchor)
+      ..icon = await _gmIconFromBitmapDescriptor(marker.icon, marker.anchor, marker.rotation)
       ..title = sanitizeHtml(marker.infoWindow.title ?? '')
       ..zIndex = marker.zIndex
       ..visible = marker.visible
@@ -791,7 +945,7 @@ Future<O> _markerOptionsFromMarker<T, O>(
       ..draggable = marker.draggable;
 
     // TODO(ditman): Compute anchor properly, otherwise infowindows attach to the wrong spot.
-    // Flat and Rotation are not supported directly on the web.
+    // Flat is not supported on the web.
 
     return options as O;
   }

@@ -102,6 +102,10 @@ There's no "Map Toolbar" in web, so the `mapToolbarEnabled` option is unused.
 
 There's no `defaultMarkerWithHue` in web. If you need colored pins/markers, you may need to use your own asset images.
 
+`Marker.rotation` is supported for image icons and `PinConfig`s, but not for the default marker.
+For legacy (non-advanced) markers, a rotated copy of the icon image is drawn, so images from other
+origins must be served with CORS headers to be rotated. `Marker.flat` is not supported.
+
 Indoor and building layers are still not available on the web. Traffic is.
 
 Only Android supports "[Lite Mode](https://developers.google.com/maps/documentation/android-sdk/lite)", so the `liteModeEnabled` constructor argument can't be set to `true` on web apps.

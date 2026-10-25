@@ -480,6 +480,34 @@ void main() {
       expect(icon.style.height, '30px');
     });
 
+    testWidgets('markers with custom bitmap icon are rotated around their anchor', (
+      WidgetTester tester,
+    ) async {
+      final Uint8List bytes = const Base64Decoder().convert(iconImageBase64);
+      await controller.addMarkers(<AdvancedMarker>{
+        AdvancedMarker(
+          markerId: const MarkerId('1'),
+          icon: BytesMapBitmap(bytes, width: 20, height: 30),
+          anchor: const Offset(0.25, 0.75),
+          rotation: 45,
+        ),
+        AdvancedMarker(
+          markerId: const MarkerId('2'),
+          icon: BytesMapBitmap(bytes, width: 20, height: 30),
+        ),
+      });
+
+      final rotated = controller.markers[const MarkerId('1')]?.marker?.content as HTMLImageElement?;
+      expect(rotated, isNotNull);
+      expect(rotated!.style.transform, 'rotate(45deg)');
+      expect(rotated.style.transformOrigin, '25% 75%');
+
+      final unrotated =
+          controller.markers[const MarkerId('2')]?.marker?.content as HTMLImageElement?;
+      expect(unrotated, isNotNull);
+      expect(unrotated!.style.transform, isEmpty);
+    });
+
     testWidgets('markers with anchor work', (WidgetTester tester) async {
       const markerId = MarkerId('1');
       const anchorOffset = Offset(0.14, 0.75);

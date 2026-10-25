@@ -2,6 +2,7 @@
 
 * Implements `getClusters` and `onClusterManagerUpdate`.
 * Fixes clearing the map style, which previously kept the last style.
+* Adds support for `Marker.rotation` with image icons.
 
 ## 0.6.5
 
