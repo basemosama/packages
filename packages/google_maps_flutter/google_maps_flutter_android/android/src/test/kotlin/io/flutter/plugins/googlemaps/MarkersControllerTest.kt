@@ -10,6 +10,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.AdvancedMarkerOptions
 import com.google.android.gms.maps.model.AdvancedMarkerOptions.CollisionBehavior
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
@@ -321,18 +322,18 @@ class MarkersControllerTest {
         }
     controller.changeMarkers(changedMarkers)
 
-    // Verify removeItems is called exactly once for cluster manager 1 with all 5
-    // markers
+    // Verify cluster manager 1 is updated exactly once, removing all 5 markers
     verify(clusterManagersController, times(1))
-        .removeItems(
+        .replaceItems(
             eq(clusterManagerId1),
-            argThat { size == 5 && all { it.clusterManagerId() == clusterManagerId1 } })
+            argThat { size == 5 && all { it.clusterManagerId() == clusterManagerId1 } },
+            argThat { isEmpty() })
 
-    // Verify addItems is called exactly once for cluster manager 2 with all 5
-    // markers
+    // Verify cluster manager 2 is updated exactly once, adding all 5 markers
     verify(clusterManagersController, times(1))
-        .addItems(
+        .replaceItems(
             eq(clusterManagerId2),
+            argThat { isEmpty() },
             argThat { size == 5 && all { it.clusterManagerId() == clusterManagerId2 } })
 
     // Verify individual operations are never called (we're using batch operations)
@@ -374,9 +375,48 @@ class MarkersControllerTest {
 
     // In-place update: marker position is updated directly
     verify(marker, times(1)).position = newLatLng
-    // No re-clustering needed
+    // The same builder is re-added to the cluster manager so that clustering uses the new position.
+    verify(clusterManagersController, times(1))
+        .replaceItems(
+            eq(clusterManagerId),
+            argThat { isEmpty() },
+            argThat { singleOrNull() === capturedMarkerBuilder })
     verify(clusterManagersController, never()).addItems(any(), any())
     verify(clusterManagersController, never()).removeItems(any(), any())
+  }
+
+  @Test
+  fun controller_ChangeMarkerInPlaceWithoutMoveDoesNotRecluster() {
+    val markerId = "marker1"
+    val clusterManagerId = "cm123"
+    val platformMarker: PlatformMarker =
+        defaultMarker(markerId)
+            .copy(clusterManagerId = clusterManagerId, position = PlatformLatLng(1.0, 2.0))
+    controller.addMarkers(listOf(platformMarker))
+    reset(clusterManagersController)
+
+    controller.changeMarkers(listOf(platformMarker.copy(alpha = 0.5)))
+
+    verify(clusterManagersController, never()).replaceItems(any(), any(), any())
+  }
+
+  @Test
+  fun controller_MovingClusteredMarkerUpdatesClusters() {
+    val markerId = "marker1"
+    val clusterManagerId = "cm123"
+    whenever(googleMap.cameraPosition)
+        .thenReturn(CameraPosition.builder().target(LatLng(0.0, 0.0)).zoom(10f).build())
+    clusterManagersController.addClusterManagers(listOf(PlatformClusterManager(clusterManagerId)))
+    val platformMarker: PlatformMarker =
+        defaultMarker(markerId)
+            .copy(clusterManagerId = clusterManagerId, position = PlatformLatLng(1.0, 2.0))
+    controller.addMarkers(listOf(platformMarker))
+
+    controller.changeMarkers(listOf(platformMarker.copy(position = PlatformLatLng(30.0, 40.0))))
+
+    val cluster =
+        clusterManagersController.getClustersWithClusterManagerId(clusterManagerId).single()
+    assertEquals(LatLng(30.0, 40.0), cluster.position)
   }
 
   companion object {

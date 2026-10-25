@@ -794,6 +794,9 @@ abstract class MapsApi {
   /// Takes a snapshot of the map and returns its image data.
   @async
   Uint8List takeSnapshot();
+
+  /// Returns the current clusters of the given cluster manager.
+  List<PlatformCluster> getClusters(String clusterManagerId);
 }
 
 @FlutterApi()
@@ -836,6 +839,9 @@ abstract class MapsCallbackApi {
 
   /// Called when a marker cluster is tapped.
   void onClusterTap(PlatformCluster cluster);
+
+  /// Called when the clusters of a cluster manager change.
+  void onClusterManagerUpdate(String clusterManagerId, List<PlatformCluster> clusters);
 
   /// Called when a polygon is tapped.
   void onPolygonTap(String polygonId);

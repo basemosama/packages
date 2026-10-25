@@ -19,6 +19,7 @@ import com.google.maps.android.clustering.view.ClusterRenderer;
 import com.google.maps.android.clustering.view.DefaultAdvancedMarkersClusterRenderer;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.collections.MarkerManager;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,12 @@ class ClusterManagersController
   protected final HashMap<String, ClusterManager<MarkerBuilder>> clusterManagerIdToManager;
 
   private final @NonNull MapsCallbackApi flutterApi;
+
+  // The integral zoom level at which clusters were last sent to Dart, per cluster manager. The
+  // default clustering algorithm only depends on the integral zoom level, so camera moves that keep
+  // it unchanged don't change the clusters.
+  private final @NonNull HashMap<String, Integer> clusterManagerIdToLastUpdateZoom =
+      new HashMap<>();
   private @Nullable MarkerManager markerManager;
   private @Nullable GoogleMap googleMap;
   private final @NonNull PlatformMarkerType markerType;
@@ -151,6 +158,7 @@ class ClusterManagersController
     // Remove the cluster manager from the hash map to allow it to be garbage collected.
     final ClusterManager<MarkerBuilder> clusterManager =
         clusterManagerIdToManager.remove(clusterManagerId);
+    clusterManagerIdToLastUpdateZoom.remove(clusterManagerId);
     if (clusterManager == null) {
       return;
     }
@@ -166,6 +174,7 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.addItem(item);
       clusterManager.cluster();
+      sendClusterManagerUpdate(item.clusterManagerId());
     }
   }
 
@@ -175,6 +184,7 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.addItems(items);
       clusterManager.cluster();
+      sendClusterManagerUpdate(clusterManagerId);
     }
   }
 
@@ -185,6 +195,7 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.removeItem(item);
       clusterManager.cluster();
+      sendClusterManagerUpdate(item.clusterManagerId());
     }
   }
 
@@ -194,6 +205,38 @@ class ClusterManagersController
     if (clusterManager != null) {
       clusterManager.removeItems(items);
       clusterManager.cluster();
+      sendClusterManagerUpdate(clusterManagerId);
+    }
+  }
+
+  /**
+   * Removes item from the ClusterManager it belongs to without re-clustering.
+   *
+   * <p>Must be called before the position of the item changes, as the clustering algorithm locates
+   * items by the position they were added with. Add the item back with {@link #replaceItems}.
+   */
+  public void removeItemBeforePositionUpdate(MarkerBuilder item) {
+    ClusterManager<MarkerBuilder> clusterManager =
+        clusterManagerIdToManager.get(item.clusterManagerId());
+    if (clusterManager != null) {
+      clusterManager.removeItem(item);
+    }
+  }
+
+  /**
+   * Removes and adds items of the ClusterManager with the given ID, re-clustering and notifying
+   * Dart only once so that no intermediate state is reported.
+   */
+  public void replaceItems(
+      String clusterManagerId,
+      @NonNull List<MarkerBuilder> itemsToRemove,
+      @NonNull List<MarkerBuilder> itemsToAdd) {
+    ClusterManager<MarkerBuilder> clusterManager = clusterManagerIdToManager.get(clusterManagerId);
+    if (clusterManager != null) {
+      clusterManager.removeItems(itemsToRemove);
+      clusterManager.addItems(itemsToAdd);
+      clusterManager.cluster();
+      sendClusterManagerUpdate(clusterManagerId);
     }
   }
 
@@ -227,7 +270,30 @@ class ClusterManagersController
     for (Map.Entry<String, ClusterManager<MarkerBuilder>> entry :
         clusterManagerIdToManager.entrySet()) {
       entry.getValue().onCameraIdle();
+      final Integer lastUpdateZoom = clusterManagerIdToLastUpdateZoom.get(entry.getKey());
+      if (googleMap != null
+          && lastUpdateZoom != null
+          && lastUpdateZoom != (int) googleMap.getCameraPosition().zoom) {
+        sendClusterManagerUpdate(entry.getKey());
+      }
     }
+  }
+
+  /** Sends the current clusters of the ClusterManager with the given ID to Dart. */
+  private void sendClusterManagerUpdate(String clusterManagerId) {
+    if (googleMap == null || !clusterManagerIdToManager.containsKey(clusterManagerId)) {
+      return;
+    }
+    final float zoom = googleMap.getCameraPosition().zoom;
+    final Set<? extends Cluster<MarkerBuilder>> clusters =
+        getClustersWithClusterManagerId(clusterManagerId);
+    final List<PlatformCluster> platformClusters = new ArrayList<>(clusters.size());
+    for (Cluster<MarkerBuilder> cluster : clusters) {
+      platformClusters.add(Convert.clusterToPigeon(clusterManagerId, cluster));
+    }
+    clusterManagerIdToLastUpdateZoom.put(clusterManagerId, (int) zoom);
+    flutterApi.onClusterManagerUpdate(
+        clusterManagerId, platformClusters, ResultUtilsKt.emptyContinuation());
   }
 
   @Override

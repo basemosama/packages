@@ -27,9 +27,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
@@ -176,6 +179,77 @@ class ClusterManagersControllerTest {
     assertThrows(FlutterError::class.java) {
       controller.getClustersWithClusterManagerId(clusterManagerId)
     }
+  }
+
+  @Test
+  fun addItemSendsClusterManagerUpdate() = runTest {
+    val clusterManagerId = "cm_1"
+    setCameraZoom(10f)
+    controller.addClusterManagers(listOf(PlatformClusterManager(clusterManagerId)))
+
+    controller.addItem(createMarkerBuilder("m_1", clusterManagerId, LatLng(1.0, 2.0)))
+
+    verify(flutterApi).onClusterManagerUpdate(eq(clusterManagerId), any())
+  }
+
+  @Test
+  fun replaceItemsSendsSingleClusterManagerUpdate() = runTest {
+    val clusterManagerId = "cm_1"
+    setCameraZoom(10f)
+    controller.addClusterManagers(listOf(PlatformClusterManager(clusterManagerId)))
+    val oldMarker = createMarkerBuilder("m_1", clusterManagerId, LatLng(1.0, 2.0))
+    controller.addItem(oldMarker)
+
+    val newMarker = createMarkerBuilder("m_1", clusterManagerId, LatLng(30.0, 40.0))
+    controller.replaceItems(clusterManagerId, listOf(oldMarker), listOf(newMarker))
+
+    // One update for addItem, one for replaceItems.
+    verify(flutterApi, times(2)).onClusterManagerUpdate(eq(clusterManagerId), any())
+    val cluster = controller.getClustersWithClusterManagerId(clusterManagerId).single()
+    assertSame(newMarker, cluster.items.single())
+  }
+
+  @Test
+  fun cameraIdleSendsClusterManagerUpdateOnlyWhenZoomChanges() = runTest {
+    val clusterManagerId = "cm_1"
+    setCameraZoom(10f)
+    controller.addClusterManagers(listOf(PlatformClusterManager(clusterManagerId)))
+    controller.addItem(createMarkerBuilder("m_1", clusterManagerId, LatLng(1.0, 2.0)))
+    verify(flutterApi, times(1)).onClusterManagerUpdate(eq(clusterManagerId), any())
+
+    setCameraZoom(10.4f)
+    controller.onCameraIdle()
+    verify(flutterApi, times(1)).onClusterManagerUpdate(eq(clusterManagerId), any())
+
+    setCameraZoom(11f)
+    controller.onCameraIdle()
+    verify(flutterApi, times(2)).onClusterManagerUpdate(eq(clusterManagerId), any())
+  }
+
+  @Test
+  fun cameraIdleDoesNotSendUpdateForClusterManagerWithoutItems() = runTest {
+    setCameraZoom(10f)
+    controller.addClusterManagers(listOf(PlatformClusterManager("cm_1")))
+
+    setCameraZoom(12f)
+    controller.onCameraIdle()
+
+    verify(flutterApi, never()).onClusterManagerUpdate(any(), any())
+  }
+
+  private fun setCameraZoom(zoom: Float) {
+    whenever(googleMap.cameraPosition)
+        .thenReturn(CameraPosition.builder().target(LatLng(0.0, 0.0)).zoom(zoom).build())
+  }
+
+  private fun createMarkerBuilder(
+      markerId: String,
+      clusterManagerId: String,
+      position: LatLng
+  ): MarkerBuilder {
+    val markerBuilder = MarkerBuilder(markerId, clusterManagerId, PlatformMarkerType.MARKER)
+    markerBuilder.position = position
+    return markerBuilder
   }
 
   private fun createPlatformMarker(

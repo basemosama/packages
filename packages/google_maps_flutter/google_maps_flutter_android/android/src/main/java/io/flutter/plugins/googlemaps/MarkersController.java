@@ -12,9 +12,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.collections.MarkerManager;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 class MarkersController {
   private final HashMap<String, MarkerBuilder> markerIdToMarkerBuilder;
@@ -137,6 +139,21 @@ class MarkersController {
           }
         }
       } else {
+        // The clustering algorithm indexes items by the position they were added with, so a
+        // clustered marker that moves is taken out of it before the update and added back after.
+        // Re-adding the same builder lets the cluster renderer keep the existing map marker.
+        final boolean clusteredMarkerMoved =
+            clusterManagerId != null
+                && !markerBuilder
+                    .getPosition()
+                    .equals(Convert.latLngFromPigeon(markerToChange.getPosition()));
+        if (clusteredMarkerMoved) {
+          clusterManagersController.removeItemBeforePositionUpdate(markerBuilder);
+          markersToAddByCluster
+              .computeIfAbsent(clusterManagerId, k -> new ArrayList<>())
+              .add(markerBuilder);
+        }
+
         // Update existing marker in place
         Convert.interpretMarkerOptions(
             markerToChange, markerBuilder, assetManager, density, bitmapDescriptorFactoryWrapper);
@@ -152,14 +169,14 @@ class MarkersController {
       }
     }
 
-    // Batch remove from cluster managers
-    for (Map.Entry<String, List<MarkerBuilder>> entry : markersToRemoveByCluster.entrySet()) {
-      clusterManagersController.removeItems(entry.getKey(), entry.getValue());
-    }
-
-    // Batch add to cluster managers
-    for (Map.Entry<String, List<MarkerBuilder>> entry : markersToAddByCluster.entrySet()) {
-      clusterManagersController.addItems(entry.getKey(), entry.getValue());
+    // Batch update cluster managers, once per cluster manager.
+    Set<String> changedClusterManagerIds = new HashSet<>(markersToRemoveByCluster.keySet());
+    changedClusterManagerIds.addAll(markersToAddByCluster.keySet());
+    for (String clusterManagerId : changedClusterManagerIds) {
+      clusterManagersController.replaceItems(
+          clusterManagerId,
+          markersToRemoveByCluster.getOrDefault(clusterManagerId, new ArrayList<>()),
+          markersToAddByCluster.getOrDefault(clusterManagerId, new ArrayList<>()));
     }
   }
 

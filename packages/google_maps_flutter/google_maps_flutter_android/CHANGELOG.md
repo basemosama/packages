@@ -1,3 +1,9 @@
+## NEXT
+
+* Implements `getClusters` and `onClusterManagerUpdate`.
+* Fixes clustering of clustered markers whose position changes, which previously kept
+  using the position the marker was added with.
+
 ## 2.21.1
 
 * Updates Robolectric to 4.17 and adds the JVM arguments it requires for unit tests.
