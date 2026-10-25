@@ -1,3 +1,7 @@
+## NEXT
+
+* Implements `getClusters` and `onClusterManagerUpdate`.
+
 ## 0.6.5
 
 * Adds support for `myLocationEnabled` and `myLocationButtonEnabled`.

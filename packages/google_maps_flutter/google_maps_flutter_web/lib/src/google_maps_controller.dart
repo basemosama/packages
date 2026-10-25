@@ -588,6 +588,11 @@ class GoogleMapController {
     _clusterManagersController?.removeClusterManagers(updates.clusterManagerIdsToRemove);
   }
 
+  /// Returns the current clusters of the cluster manager with the given [clusterManagerId].
+  List<Cluster> getClusters(ClusterManagerId clusterManagerId) {
+    return _clusterManagersController?.getClusters(clusterManagerId) ?? <Cluster>[];
+  }
+
   /// Updates the set of [GroundOverlay]s.
   void updateGroundOverlays(GroundOverlayUpdates updates) {
     assert(_groundOverlaysController != null, 'Cannot update tile overlays after dispose().');
@@ -682,6 +687,7 @@ class GoogleMapController {
     _polygonsController = null;
     _polylinesController = null;
     _markersController = null;
+    _clusterManagersController?.dispose();
     _clusterManagersController = null;
     _tileOverlaysController = null;
     _groundOverlaysController = null;

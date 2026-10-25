@@ -96,6 +96,57 @@ void main() {
       expect(updatedClusters.length, 0);
     });
 
+    testWidgets('cluster updates are sent and getClusters returns clusters', (
+      WidgetTester tester,
+    ) async {
+      final int testMapId = getNextMapId();
+      const clusterManagerId = ClusterManagerId('cluster 1');
+      final initialMarkers = <Marker>{
+        for (var i = 0; i < 2; i++)
+          Marker(
+            markerId: MarkerId(i.toString()),
+            position: mapCenter,
+            clusterManagerId: clusterManagerId,
+          ),
+      };
+      await pumpPlatformMap(
+        tester,
+        (void Function(int) onPlatformViewCreated) => _wrapMap(
+          plugin.buildViewWithConfiguration(
+            testMapId,
+            onPlatformViewCreated,
+            widgetConfiguration: const MapWidgetConfiguration(
+              initialCameraPosition: initialCameraPosition,
+              textDirection: TextDirection.ltr,
+            ),
+            mapObjects: MapObjects(
+              clusterManagers: <ClusterManager>{
+                const ClusterManager(clusterManagerId: clusterManagerId),
+              },
+            ),
+          ),
+        ),
+      );
+      // The initial render has no clusters, so the first update is sent once
+      // markers are added.
+      final Future<ClusterManagerUpdateEvent> nextUpdate = plugin
+          .onClusterManagerUpdate(mapId: testMapId)
+          .first;
+      await plugin.updateMarkers(
+        MarkerUpdates.from(const <Marker>{}, initialMarkers),
+        mapId: testMapId,
+      );
+
+      final ClusterManagerUpdateEvent event = await nextUpdate;
+      expect(event.clusterManagerId, clusterManagerId);
+      expect(event.clusters, hasLength(1));
+      expect(event.clusters.single.markerIds, hasLength(2));
+      expect(
+        await plugin.getClusters(mapId: testMapId, clusterManagerId: clusterManagerId),
+        event.clusters,
+      );
+    });
+
     testWidgets('clusters render once per batched add', (WidgetTester tester) async {
       const clusterManagerId = ClusterManagerId('cluster 1');
 

@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:js_interop';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:google_maps/google_maps.dart' as gmaps;
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 
@@ -45,6 +46,14 @@ class ClusterManagersController<T extends Object> extends GeometryController {
   // A cache of [MarkerClusterer]s indexed by their [ClusterManagerId].
   final Map<ClusterManagerId, MarkerClusterer<T>> _clusterManagerIdToMarkerClusterer;
 
+  // Subscriptions to the clustering events of each [MarkerClusterer].
+  final Map<ClusterManagerId, StreamSubscription<ClusteringEvent>> _clusteringEventSubscriptions =
+      <ClusterManagerId, StreamSubscription<ClusteringEvent>>{};
+
+  // The clusters last sent in a [ClusterManagerUpdateEvent], per cluster manager.
+  final Map<ClusterManagerId, List<Cluster>> _lastSentClusters =
+      <ClusterManagerId, List<Cluster>>{};
+
   /// Adds a set of [ClusterManager] objects to the cache.
   void addClusterManagers(Set<ClusterManager> clusterManagersToAdd) {
     clusterManagersToAdd.forEach(_addClusterManager);
@@ -58,7 +67,34 @@ class ClusterManagersController<T extends Object> extends GeometryController {
     );
 
     _clusterManagerIdToMarkerClusterer[clusterManager.clusterManagerId] = markerClusterer;
+    _clusteringEventSubscriptions[clusterManager.clusterManagerId] = interop
+        .getClustererEvents(markerClusterer)
+        .where((ClusteringEvent event) => event == ClusteringEvent.end)
+        .listen((_) => _sendClusters(clusterManager.clusterManagerId));
     markerClusterer.onAdd();
+  }
+
+  /// Sends the current clusters of the given cluster manager, unless they are
+  /// unchanged since they were last sent.
+  void _sendClusters(ClusterManagerId clusterManagerId) {
+    final List<Cluster> clusters = getClusters(clusterManagerId);
+    if (_streamController.isClosed ||
+        listEquals(clusters, _lastSentClusters[clusterManagerId] ?? const <Cluster>[])) {
+      return;
+    }
+    _lastSentClusters[clusterManagerId] = clusters;
+    _streamController.add(
+      ClusterManagerUpdateEvent(mapId, clusters, clusterManagerId: clusterManagerId),
+    );
+  }
+
+  /// Stops listening to clustering events.
+  void dispose() {
+    for (final StreamSubscription<ClusteringEvent> subscription
+        in _clusteringEventSubscriptions.values) {
+      subscription.cancel();
+    }
+    _clusteringEventSubscriptions.clear();
   }
 
   /// Removes a set of [ClusterManagerId]s from the cache.
@@ -70,6 +106,8 @@ class ClusterManagersController<T extends Object> extends GeometryController {
     final MarkerClusterer<T>? markerClusterer =
         _clusterManagerIdToMarkerClusterer[clusterManagerId];
     if (markerClusterer != null) {
+      _clusteringEventSubscriptions.remove(clusterManagerId)?.cancel();
+      _lastSentClusters.remove(clusterManagerId);
       markerClusterer.clearMarkers(true);
       markerClusterer.onRemove();
     }
