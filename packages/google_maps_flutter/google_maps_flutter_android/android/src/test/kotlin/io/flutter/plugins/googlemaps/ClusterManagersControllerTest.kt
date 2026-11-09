@@ -157,7 +157,7 @@ class ClusterManagersControllerTest {
     marker2.position = markerPosition2
     cluster.add(marker2)
 
-    controller.onClusterClick(cluster)
+    assertTrue(controller.onClusterClick(cluster))
     verify(flutterApi).onClusterTap(eq(Convert.clusterToPigeon(clusterManagerId, cluster)))
   }
 

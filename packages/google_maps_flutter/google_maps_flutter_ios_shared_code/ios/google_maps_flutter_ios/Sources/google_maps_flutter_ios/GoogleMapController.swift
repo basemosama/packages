@@ -364,7 +364,8 @@ public class GoogleMapController: NSObject, GMSMapViewDelegate, FlutterPlatformV
   public func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool {
     if let cluster = marker.userData as? GMUStaticCluster {
       clusterManagersController.didTap(cluster)
-      return false
+      // Consume the tap so the map does not focus the cluster; Dart handles the camera.
+      return true
     }
     if let markerId = markerIdentifierFromMarker(marker) {
       return markersController.didTapMarker(withIdentifier: markerId)

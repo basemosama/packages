@@ -526,8 +526,8 @@
   if ([marker.userData isKindOfClass:[GMUStaticCluster class]]) {
     GMUStaticCluster *cluster = marker.userData;
     [self.clusterManagersController didTapCluster:cluster];
-    // When NO is returned, the map will focus on the cluster.
-    return NO;
+    // Consume the tap so the map does not focus the cluster; Dart handles the camera.
+    return YES;
   }
   return
       [self.markersController didTapMarkerWithIdentifier:FGMGetMarkerIdentifierFromMarker(marker)];

@@ -305,8 +305,8 @@ class ClusterManagersController
           Convert.clusterToPigeon(clusterManagerId, cluster), ResultUtilsKt.emptyContinuation());
     }
 
-    // Return false to allow the default behavior of the cluster click event to occur.
-    return false;
+    // Consume the event so the native map does not focus the cluster; Dart handles the camera.
+    return true;
   }
 
   /**
