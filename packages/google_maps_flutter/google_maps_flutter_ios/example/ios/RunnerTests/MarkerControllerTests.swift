@@ -284,6 +284,78 @@ import Testing
     #expect(marker.hasSetMap)
   }
 
+  /// A bytes icon whose data is a new object each call, as when it crosses the platform channel.
+  func bytesBitmap(size: CGFloat) throws -> FGMPlatformBitmap {
+    let image = UIGraphicsImageRenderer(size: CGSize(width: size, height: size)).image { context in
+      UIColor.red.setFill()
+      context.fill(CGRect(x: 0, y: 0, width: size, height: size))
+    }
+    let pngData = try #require(image.pngData())
+    return FGMPlatformBitmap.make(
+      withBitmap: FGMPlatformBitmapBytesMap.make(
+        withByteData: FlutterStandardTypedData(bytes: pngData),
+        bitmapScaling: .none,
+        imagePixelRatio: 1,
+        width: nil,
+        height: nil
+      )
+    )
+  }
+
+  func movableMarker(icon: FGMPlatformBitmap, latitude: Double) -> FGMPlatformMarker {
+    return FGMPlatformMarker.make(
+      withAlpha: 1.0,
+      anchor: FGMPlatformPoint.makeWith(x: 0.5, y: 0.5),
+      consumeTapEvents: false,
+      draggable: false,
+      flat: true,
+      icon: icon,
+      infoWindow: FGMPlatformInfoWindow.make(
+        withTitle: nil,
+        snippet: nil,
+        anchor: FGMPlatformPoint.makeWith(x: 0.5, y: 0)
+      ),
+      position: FGMPlatformLatLng.make(withLatitude: latitude, longitude: 0),
+      rotation: 0,
+      visible: true,
+      zIndex: 0,
+      markerId: "vehicle",
+      clusterManagerId: nil,
+      collisionBehavior: nil
+    )
+  }
+
+  @Test func movingMarkerWithSameIconKeepsIcon() throws {
+    let mapView = MarkerControllerTests.mapView()
+    let controller = markersController(withMapView: mapView, eventDelegate: TestMapEventHandler())
+    controller.add([movableMarker(icon: try bytesBitmap(size: 2), latitude: 0)])
+    let markerController = try #require(
+      controller.markerIdentifierToController["vehicle"] as? FGMMarkerController
+    )
+    let marker = try #require(markerController.marker)
+    let firstIcon = try #require(marker.icon)
+
+    controller.change([movableMarker(icon: try bytesBitmap(size: 2), latitude: 10)])
+
+    #expect(marker.icon === firstIcon)
+    #expect(abs(marker.position.latitude - 10) <= 0.0001)
+  }
+
+  @Test func changingMarkerIconAppliesNewIcon() throws {
+    let mapView = MarkerControllerTests.mapView()
+    let controller = markersController(withMapView: mapView, eventDelegate: TestMapEventHandler())
+    controller.add([movableMarker(icon: try bytesBitmap(size: 2), latitude: 0)])
+    let markerController = try #require(
+      controller.markerIdentifierToController["vehicle"] as? FGMMarkerController
+    )
+    let marker = try #require(markerController.marker)
+    let firstIcon = try #require(marker.icon)
+
+    controller.change([movableMarker(icon: try bytesBitmap(size: 4), latitude: 0)])
+
+    #expect(marker.icon !== firstIcon)
+  }
+
   @Test func assetProviderIsRetained() {
     var markerController: FGMMarkersController?
     weak var weakAssetProvider: TestAssetProvider?

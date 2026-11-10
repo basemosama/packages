@@ -24,6 +24,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
@@ -419,16 +420,50 @@ class MarkersControllerTest {
     assertEquals(LatLng(30.0, 40.0), cluster.position)
   }
 
+  @Test
+  fun controller_ChangeMarkerWithSameIconDoesNotReapplyIcon() {
+    val marker = mock<Marker>()
+    val markerId = "vehicle"
+    whenever(marker.id).thenReturn(markerId)
+    whenever(googleMap.addMarker(any())).thenReturn(marker)
+    val platformMarker = defaultMarker(markerId)
+    controller.addMarkers(listOf(platformMarker))
+
+    controller.changeMarkers(
+        listOf(platformMarker.copy(position = PlatformLatLng(1.0, 2.0), rotation = 45.0)))
+
+    verify(marker, never()).setIcon(anyOrNull())
+    verify(marker).setPosition(LatLng(1.0, 2.0))
+    verify(marker).setRotation(45f)
+  }
+
+  @Test
+  fun controller_ChangeMarkerWithNewIconAppliesIcon() {
+    val marker = mock<Marker>()
+    val markerId = "vehicle"
+    whenever(marker.id).thenReturn(markerId)
+    whenever(googleMap.addMarker(any())).thenReturn(marker)
+    val platformMarker = defaultMarker(markerId)
+    controller.addMarkers(listOf(platformMarker))
+
+    controller.changeMarkers(listOf(platformMarker.copy(icon = bytesIcon(size = 2))))
+
+    verify(marker, times(1)).setIcon(anyOrNull())
+  }
+
   companion object {
-    private fun defaultMarker(markerId: String): PlatformMarker {
-      val fakeBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+    private fun bytesIcon(size: Int = 1): PlatformBitmap {
+      val fakeBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
       val byteArrayOutputStream = ByteArrayOutputStream()
       fakeBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
       val byteArray = byteArrayOutputStream.toByteArray()
-      val icon =
-          PlatformBitmap(
-              PlatformBitmapBytesMap(
-                  byteArray, PlatformMapBitmapScaling.NONE, imagePixelRatio = 1.0, null, null))
+      return PlatformBitmap(
+          PlatformBitmapBytesMap(
+              byteArray, PlatformMapBitmapScaling.NONE, imagePixelRatio = 1.0, null, null))
+    }
+
+    private fun defaultMarker(markerId: String): PlatformMarker {
+      val icon = bytesIcon()
       val anchor = PlatformDoublePair(0.5, 0.0)
       val infoWindow = PlatformInfoWindow(null, null, anchor)
       return PlatformMarker(

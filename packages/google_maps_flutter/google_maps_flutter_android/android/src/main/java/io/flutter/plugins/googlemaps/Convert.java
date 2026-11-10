@@ -586,12 +586,29 @@ class Convert {
       AssetManager assetManager,
       float density,
       BitmapDescriptorFactoryWrapper wrapper) {
+    interpretMarkerOptions(marker, sink, assetManager, density, wrapper, true);
+  }
+
+  /**
+   * Set the options in the given object to marker options sink. When {@code applyIcon} is false
+   * the sink keeps its current icon, which avoids decoding the bitmap and resetting the native
+   * icon (a visible blink) for updates that only move or rotate the marker.
+   */
+  static void interpretMarkerOptions(
+      PlatformMarker marker,
+      MarkerOptionsSink sink,
+      AssetManager assetManager,
+      float density,
+      BitmapDescriptorFactoryWrapper wrapper,
+      boolean applyIcon) {
     sink.setAlpha((float) marker.getAlpha());
     sink.setAnchor((float) marker.getAnchor().getX(), (float) marker.getAnchor().getY());
     sink.setConsumeTapEvents(marker.getConsumeTapEvents());
     sink.setDraggable(marker.getDraggable());
     sink.setFlat(marker.getFlat());
-    sink.setIcon(toBitmapDescriptor(marker.getIcon(), assetManager, density, wrapper));
+    if (applyIcon) {
+      sink.setIcon(toBitmapDescriptor(marker.getIcon(), assetManager, density, wrapper));
+    }
     interpretInfoWindowOptions(sink, marker.getInfoWindow());
     sink.setPosition(latLngFromPigeon(marker.getPosition()));
     sink.setRotation((float) marker.getRotation());

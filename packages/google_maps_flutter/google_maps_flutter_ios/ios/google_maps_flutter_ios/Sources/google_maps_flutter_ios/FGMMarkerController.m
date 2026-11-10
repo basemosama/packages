@@ -18,8 +18,34 @@
 @property(copy, nonatomic, nullable) NSString *clusterManagerIdentifier;
 /// The unique identifier for the marker.
 @property(copy, nonatomic) NSString *markerIdentifier;
+/// The icon last applied to the marker, so updates with an unchanged icon skip re-decoding it.
+@property(strong, nonatomic, nullable) FGMPlatformBitmap *appliedIcon;
 
 @end
+
+/// Whether two marker icons have the same content.
+///
+/// The generated `isEqual:` compares byte data through `FlutterStandardTypedData`, which may
+/// compare by identity, so the bytes of a bytes-map icon are compared directly.
+static BOOL FGMMarkerIconsEqual(FGMPlatformBitmap *_Nullable a, FGMPlatformBitmap *_Nullable b) {
+  if (a == nil || b == nil) {
+    return NO;
+  }
+  if ([a isEqual:b]) {
+    return YES;
+  }
+  if (![a.bitmap isKindOfClass:[FGMPlatformBitmapBytesMap class]] ||
+      ![b.bitmap isKindOfClass:[FGMPlatformBitmapBytesMap class]]) {
+    return NO;
+  }
+  FGMPlatformBitmapBytesMap *bytesA = (FGMPlatformBitmapBytesMap *)a.bitmap;
+  FGMPlatformBitmapBytesMap *bytesB = (FGMPlatformBitmapBytesMap *)b.bitmap;
+  return [bytesA.byteData.data isEqualToData:bytesB.byteData.data] &&
+         bytesA.bitmapScaling == bytesB.bitmapScaling &&
+         bytesA.imagePixelRatio == bytesB.imagePixelRatio &&
+         (bytesA.width == bytesB.width || [bytesA.width isEqual:bytesB.width]) &&
+         (bytesA.height == bytesB.height || [bytesA.height isEqual:bytesB.height]);
+}
 
 @implementation FGMMarkerController
 
@@ -66,12 +92,17 @@
   // If marker belongs the cluster manager, visibility need to be controlled with the opacity
   // as the cluster manager controls when marker is on the map and when not.
   BOOL useOpacityForVisibility = self.clusterManagerIdentifier != nil;
+  // A marker that moves every frame keeps the same icon; re-applying it would decode the image
+  // and blink the marker each time.
+  BOOL applyIcon = !FGMMarkerIconsEqual(self.appliedIcon, platformMarker.icon);
   [FGMMarkerController updateMarker:self.marker
                  fromPlatformMarker:platformMarker
                         withMapView:self.mapView
                       assetProvider:assetProvider
                         screenScale:screenScale
-          usingOpacityForVisibility:useOpacityForVisibility];
+          usingOpacityForVisibility:useOpacityForVisibility
+                          applyIcon:applyIcon];
+  self.appliedIcon = platformMarker.icon;
 }
 
 + (void)updateMarker:(GMSMarker *)marker
@@ -80,10 +111,27 @@
                 assetProvider:(NSObject<FGMAssetProvider> *)assetProvider
                   screenScale:(CGFloat)screenScale
     usingOpacityForVisibility:(BOOL)useOpacityForVisibility {
+  [self updateMarker:marker
+             fromPlatformMarker:platformMarker
+                    withMapView:mapView
+                  assetProvider:assetProvider
+                    screenScale:screenScale
+      usingOpacityForVisibility:useOpacityForVisibility
+                      applyIcon:YES];
+}
+
++ (void)updateMarker:(GMSMarker *)marker
+           fromPlatformMarker:(FGMPlatformMarker *)platformMarker
+                  withMapView:(GMSMapView *)mapView
+                assetProvider:(NSObject<FGMAssetProvider> *)assetProvider
+                  screenScale:(CGFloat)screenScale
+    usingOpacityForVisibility:(BOOL)useOpacityForVisibility
+                    applyIcon:(BOOL)applyIcon {
   marker.groundAnchor = FGMGetCGPointForPigeonPoint(platformMarker.anchor);
   marker.draggable = platformMarker.draggable;
-  UIImage *image = FGMIconFromBitmap(platformMarker.icon, assetProvider, screenScale);
-  marker.icon = image;
+  if (applyIcon) {
+    marker.icon = FGMIconFromBitmap(platformMarker.icon, assetProvider, screenScale);
+  }
   marker.flat = platformMarker.flat;
   marker.position = FGMGetCoordinateForPigeonLatLng(platformMarker.position);
   marker.rotation = platformMarker.rotation;
@@ -106,7 +154,11 @@
     marker.opacity = platformMarker.visible ? platformMarker.alpha : 0.0f;
   } else {
     marker.opacity = platformMarker.alpha;
-    marker.map = platformMarker.visible ? mapView : nil;
+    // Re-assigning the same map can re-add the marker, so only assign it when it changes.
+    GMSMapView *targetMap = platformMarker.visible ? mapView : nil;
+    if (marker.map != targetMap) {
+      marker.map = targetMap;
+    }
   }
 }
 

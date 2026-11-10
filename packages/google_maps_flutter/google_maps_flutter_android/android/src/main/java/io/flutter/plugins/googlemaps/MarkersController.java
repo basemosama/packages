@@ -21,6 +21,8 @@ import java.util.Set;
 class MarkersController {
   private final HashMap<String, MarkerBuilder> markerIdToMarkerBuilder;
   private final HashMap<String, MarkerController> markerIdToController;
+  // Last icon applied per marker, so updates with an unchanged icon skip re-decoding it.
+  private final HashMap<String, PlatformBitmap> markerIdToIcon;
   private final HashMap<String, String> googleMapsMarkerIdToDartMarkerId;
   private final @NonNull MapsCallbackApi flutterApi;
   private MarkerManager.Collection markerCollection;
@@ -39,6 +41,7 @@ class MarkersController {
       @NonNull PlatformMarkerType markerType) {
     this.markerIdToMarkerBuilder = new HashMap<>();
     this.markerIdToController = new HashMap<>();
+    this.markerIdToIcon = new HashMap<>();
     this.googleMapsMarkerIdToDartMarkerId = new HashMap<>();
     this.flutterApi = flutterApi;
     this.clusterManagersController = clusterManagersController;
@@ -66,6 +69,7 @@ class MarkersController {
 
       // Store marker builder for future marker rebuilds when used under clusters.
       markerIdToMarkerBuilder.put(markerId, markerBuilder);
+      markerIdToIcon.put(markerId, markerToAdd.getIcon());
 
       if (clusterManagerId == null) {
         nonClusteredMarkers.add(markerBuilder);
@@ -120,6 +124,7 @@ class MarkersController {
             density,
             bitmapDescriptorFactoryWrapper);
         markerIdToMarkerBuilder.put(markerId, newMarkerBuilder);
+        markerIdToIcon.put(markerId, markerToChange.getIcon());
 
         if (clusterManagerId != null) {
           markersToAddByCluster
@@ -154,9 +159,17 @@ class MarkersController {
               .add(markerBuilder);
         }
 
-        // Update existing marker in place
+        // Update existing marker in place. A marker that moves every frame keeps the same icon,
+        // and re-applying it would decode the bitmap and blink the native marker each time.
+        final boolean iconChanged =
+            !markerToChange.getIcon().equals(markerIdToIcon.get(markerId));
         Convert.interpretMarkerOptions(
-            markerToChange, markerBuilder, assetManager, density, bitmapDescriptorFactoryWrapper);
+            markerToChange,
+            markerBuilder,
+            assetManager,
+            density,
+            bitmapDescriptorFactoryWrapper,
+            iconChanged);
         MarkerController markerController = markerIdToController.get(markerId);
         if (markerController != null) {
           Convert.interpretMarkerOptions(
@@ -164,8 +177,10 @@ class MarkersController {
               markerController,
               assetManager,
               density,
-              bitmapDescriptorFactoryWrapper);
+              bitmapDescriptorFactoryWrapper,
+              iconChanged);
         }
+        markerIdToIcon.put(markerId, markerToChange.getIcon());
       }
     }
 
@@ -219,6 +234,7 @@ class MarkersController {
     // Clean up all marker references
     for (String markerId : markerIdsToRemove) {
       markerIdToMarkerBuilder.remove(markerId);
+      markerIdToIcon.remove(markerId);
       final MarkerController markerController = markerIdToController.remove(markerId);
       if (markerController != null) {
         googleMapsMarkerIdToDartMarkerId.remove(markerController.getGoogleMapsMarkerId());
@@ -227,6 +243,7 @@ class MarkersController {
   }
 
   private void removeMarker(String markerId) {
+    markerIdToIcon.remove(markerId);
     final MarkerBuilder markerBuilder = markerIdToMarkerBuilder.remove(markerId);
     if (markerBuilder == null) {
       return;
