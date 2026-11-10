@@ -429,8 +429,11 @@ class MarkersControllerTest {
     val platformMarker = defaultMarker(markerId)
     controller.addMarkers(listOf(platformMarker))
 
+    // A new but equal bitmap, as each update brings across the platform channel.
     controller.changeMarkers(
-        listOf(platformMarker.copy(position = PlatformLatLng(1.0, 2.0), rotation = 45.0)))
+        listOf(
+            platformMarker.copy(
+                icon = bytesIcon(), position = PlatformLatLng(1.0, 2.0), rotation = 45.0)))
 
     verify(marker, never()).setIcon(anyOrNull())
     verify(marker).setPosition(LatLng(1.0, 2.0))
